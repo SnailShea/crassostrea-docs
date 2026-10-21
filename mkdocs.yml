@@ -1,0 +1,87 @@
+site_name: Crassostrea
+site_description: Documentation of Crassostrea, a spam filter gateway for EL10
+repo_name: crassostrea
+copyright: "Crassostrea is licensed under the GPL-3.0. Based on mailcow: dockerized."
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Administrator guide:
+      - Overview: admin/overview.md
+      - Requirements: admin/requirements.md
+      - Installation: admin/installation.md
+      - Configuration reference: admin/configuration.md
+      - Domains and delivery: admin/domains.md
+      - Recipient directories: admin/directories.md
+      - Filtering: admin/filtering.md
+      - Threat protection: admin/protection.md
+      - Outbound mail: admin/outbound.md
+      - Quarantine and digests: admin/quarantine.md
+      - Mail log and statistics: admin/mail-log.md
+      - DMARC and TLS reports: admin/reports.md
+      - Journaling: admin/journaling.md
+      - Web interface: admin/web-ui.md
+      - Administrators and audit log: admin/administrators.md
+      - REST API: admin/api.md
+      - Certificates and TLS: admin/certificates.md
+      - Hostname, IP addressing and DNS: admin/network.md
+      - High availability: admin/high-availability.md
+      - Operations: admin/operations.md
+      - Backups: admin/backups.md
+      - Monitoring: admin/monitoring.md
+      - Security: admin/security.md
+      - Troubleshooting: admin/troubleshooting.md
+      - Migrating from the Docker version: admin/migration.md
+  - Developer guide:
+      - Architecture: developer/architecture.md
+      - Design decisions: developer/design.md
+      - Code layout: developer/code-layout.md
+      - Development environment: developer/environment.md
+      - Testing: developer/testing.md
+      - Contributing: developer/contributing.md
+      - Script reference: developer/reference.md
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn

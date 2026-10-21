@@ -1,0 +1,158 @@
+# Threat protection
+
+Besides Rspamd's own scoring ([Filtering](filtering.md)), the gateway has
+checks you configure in the web interface. All of them run inside Rspamd;
+their settings are written as maps to `/etc/rspamd/custom/` and take effect
+within a minute.
+
+| Check | Page | Default |
+| --- | --- | --- |
+| [Attachment policy](#attachment-policy) | Attachments | On, with a list of dangerous file types |
+| [Hash lookups](#hash-lookups) | Attachments | Off |
+| [Impersonation](#impersonation) | Impersonation | Lookalike and spoofing checks on; name check needs protected people |
+| [Link protection](#link-protection) | Link protection, domain settings | Off (per domain) |
+| [Content rules](#content-rules) | Content rules | None |
+
+Rules that reject a message work like any other rejection: the sender is told
+during the SMTP dialogue, and inbound mail of domains with a quarantine is
+quarantined, where it can be released. Each check names itself in the mail
+log's score breakdown.
+
+## Attachment policy
+
+**Attachments** lists file extensions that are always rejected, whatever the
+spam score: by default executables, scripts, shortcuts, disk images and
+installers (`exe`, `js`, `lnk`, `iso`, `msi`, `scr`, `vbs` and more; the page
+shows the full list).
+
+- The **last extension** counts, so `invoice.pdf.exe` is an `exe`; trailing
+  dots and spaces are ignored, as Windows ignores them.
+- **Files inside archives** (zip, rar, 7z, ...) are checked too, one level
+  deep (on by default).
+- **Password-protected archives** can be rejected: the antivirus cannot look
+  into them, and they are a common way to slip malware past it (off by
+  default).
+- **Outbound mail** from the relay networks is only checked if you turn it on.
+- **Exempt senders**: envelope sender addresses or domains the policy does not
+  apply to, e.g. a software vendor.
+
+The symbol is `ATTACHMENT_BLOCKED`, with the file name. Independently of the
+policy, Rspamd scores risky types it knows, ClamAV scans the files and Olefy
+checks Office macros.
+
+## Hash lookups
+
+On the same page, the hash of every attachment can be looked up in databases
+of known malware. Each source adds its score when it knows the file (at the
+reject threshold the message is rejected and quarantined):
+
+| Source | Needs | Known malware when |
+| --- | --- | --- |
+| Team Cymru Malware Hash Registry | nothing (DNS) | at least a share of antivirus engines detect it (default 10 %) |
+| MalwareBazaar (abuse.ch) | a free Auth-Key | it is a sample in the database |
+| VirusTotal | an API key | at least a number of engines detect it (default 3) |
+
+Only hashes leave the gateway, never files. A file nobody has reported yet
+passes, so this adds to ClamAV rather than replacing it. Verdicts are cached
+for a day. The free VirusTotal key allows 4 requests a minute and 500 a day:
+set the per-minute limit to your key's, attachments beyond it are not looked
+up. The API keys are stored in the database and copied to Valkey, not into a
+map file, and are never shown again (leave the field empty to keep a key).
+
+The page lists recent detections (`GET /api/v1/hash-detections`) and looks up
+a hash you enter. Sandboxes that open unknown files need a commercial service
+or appliance and are not included.
+
+## Impersonation
+
+**Impersonation** adds score to inbound mail that pretends to come from your
+organisation. Three checks, each with its own score (0 turns it off; a score
+at or above the reject threshold rejects and quarantines):
+
+| Check | Symbol | Default score | Flags |
+| --- | --- | --- | --- |
+| Name of a protected person | `IMPERSONATION_NAME` | 6 | The `From` display name is one of the protected people, but the address is outside your domains and none of theirs |
+| Look-alike domain | `LOOKALIKE_DOMAIN` | 6 | A `From` domain imitating one of yours, see below |
+| Own domain without authentication | `SPOOFED_OWN_DOMAIN` | 8 | Your domain in `From`, but neither DMARC, DKIM nor SPF pass for it |
+
+- **Protected people**: managers, finance and HR staff whose names fraudsters
+  use, with the private addresses they really write from. Names match as whole
+  words, ignoring case and punctuation, also written "Doe, Jane".
+- **Look-alikes** of a protected domain (`example.com`): look-alike characters
+  (`examp1e.com`, `exarnple.com`, Cyrillic letters), one or two typing errors
+  (`exampel.com`), another suffix (`example.net`), the name joined with others
+  (`example-secure.com`), or the domain in front of another
+  (`example.com.evil.net`). Very short names are only compared by look-alike
+  characters.
+- **Protected domains** are the gateway's domains plus "More domains to
+  protect" (e.g. a parent company). **Legitimate look-alikes** (your other
+  domains) are exempt.
+- **Spoofing**: domains that publish DMARC `p=reject` or `p=quarantine` are
+  already handled by Rspamd's DMARC check; this also covers `p=none` and
+  domains without DMARC.
+
+Mail from the relay networks is not checked. The page's test shows what a
+display name and address would trigger. API: `/api/v1/protected-people`,
+`POST /api/v1/impersonation/test`, scores in the settings.
+
+## Link protection
+
+With link protection a domain's inbound mail gets its links rewritten to
+`https://<hostname>/l/<id>`. When a recipient clicks, the gateway checks the
+link **at that moment** and redirects to it, or shows a warning page. A site
+that turns malicious after the message arrived is still blocked.
+
+- Turn it on per domain (domain settings: "Check links when they are
+  clicked"). A message is rewritten only when all its recipients are in such
+  domains.
+- A click is checked against your **blocked sites** and the domain block lists
+  Spamhaus DBL (with `SPAMHAUS_DQS_KEY` through DQS), SURBL and URIBL. Verdicts
+  are cached for 10 minutes.
+- The warning page can offer a way on ("open it anyway"), off by default.
+- Not rewritten: signed or encrypted mail (S/MIME, PGP), outbound mail,
+  rejected mail, messages larger than the message size limit, links to exempt
+  hosts and to the gateway itself. HTML links and plain-text URLs are
+  rewritten; images are not.
+- The original URLs are kept in Valkey for 90 days (configurable); older links
+  show an error page. Only links the gateway rewrote can be opened, so it
+  cannot be abused as an open redirector.
+- The mail log keeps each message as it arrived, before rewriting.
+
+The page lists recent clicks (all or blocked) and checks a link you enter. API:
+`GET /api/v1/link-clicks`, `POST /api/v1/link-check`.
+
+!!! note
+    The link endpoint `/l/` must be reachable by your recipients wherever they
+    read mail, like the web interface. Rewriting changes the message body, so
+    the sender's DKIM signature no longer verifies downstream; the gateway
+    has checked it already.
+
+## Content rules
+
+**Content rules** are your own rules for what a message says or where it comes
+from. A rule looks at one part of the message:
+
+| Part | Matched against |
+| --- | --- |
+| Subject | the decoded subject |
+| From | display name and address, as `Name <address>` |
+| Envelope sender | the SMTP sender |
+| A recipient | each envelope recipient |
+| A header | each value of the named header |
+| The text | the text parts |
+| A link | each URL |
+| An attachment name | each file name |
+
+with **contains** or **is** (both ignoring the case of letters A to Z) or a
+**regular expression** (PCRE; `(?i)` ignores case). It applies to inbound,
+outbound or all mail, and then:
+
+| Action | Effect | Symbol |
+| --- | --- | --- |
+| Add a score | Adds its score to the spam score; negative favours such mail | `CONTENT_RULE` |
+| Reject | Rejects the message with your message (or a default); wins over the other rules | `CONTENT_RULE_REJECT` |
+| Deliver with X-Content-Rule | Adds a header naming the rule, e.g. for a rule in the mail server | `CONTENT_RULE_TAG` |
+
+Rules are checked before Rspamd's other checks, so a reject rule always
+applies. Test them on a pasted message (headers, a blank line, the body) with
+an envelope sender and recipients. API: `/api/v1/content-rules`.

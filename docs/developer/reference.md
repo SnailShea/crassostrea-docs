@@ -1,0 +1,142 @@
+# Script reference
+
+## Entry points
+
+| Script | Usage |
+| --- | --- |
+| `setup.sh` | `[--hostname FQDN] [--yes] [--reconfigure] [--config-only] [--ha] [--ha-nodes LIST] [--ha-witness H=A\|none] [--ha-vip A/P\|none] [--ha-vip-interface IF] [--join FILE]` |
+| `update.sh` | `[--skip-git] [--force]` |
+| `system/install.sh` | no options; run by `setup.sh` and `update.sh` |
+| `system/configure.sh` | `[--no-restart]`: deploy and render only |
+| `system/cluster.sh` | `status`, `bundle HOSTNAME [FILE]`, `members --nodes LIST [--witness H=A \| --no-witness]`, `members --standalone`, `maintenance on\|off [NODE] [--force]`, `bootstrap [--force]`, `leave` |
+| `system/backup.sh` | `create`, `list`, `restore NAME-OR-PATH [--yes]` |
+
+## Helpers in /usr/local/libexec/spamfilter
+
+| Helper | Started by | Does |
+| --- | --- | --- |
+| `postfix-control` | `spamfilter-postfix-control.socket`, per connection | Mail queue actions of the web UI |
+| `postfix-apply` | `spamfilter-postfix-reload.path` | Message size limit into `main.cf`, reload for the relay networks |
+| `set-hostname` | `spamfilter-hostname.path` (`/var/lib/spamfilter/web/hostname`) | Hostname change |
+| `tls-apply` | `spamfilter-tls.path` (`web/tls-request.json`) | `le-test`, `le-apply`, `manual-apply`, `versions`; outcome in `/var/lib/spamfilter/tls/status.json` |
+| `network-apply` | `spamfilter-network.path` (`web/ip-request.json`) | IP addressing with test and rollback; outcome in `/var/lib/spamfilter/network/status.json` |
+| `backup` | `spamfilter-backup.timer` (`create scheduled`, `prune`), `spamfilter-backup-request.path` (`request`), `backup.sh` (`create manual`) | Backups; outcome in `/var/lib/spamfilter/backups/status.json` |
+| `dmarc-report` | `spamfilter-dmarc-report.timer` | `rspamadm dmarc_report` if the web UI allows it, under a job lock |
+| `acme` | `spamfilter-acme.timer`; `--staging-test NAME...` by `tls-apply` | Certificate |
+| `cluster-node` | `spamfilter-cluster.service` (long-running, cluster nodes) | Every 10 s: probes Valkey, Sentinel and the floating address into `/var/lib/spamfilter/cluster/probe.json`, keeps maintenance in effect; applies `web/cluster-request` (`maintenance=on\|off`, `promote=TOKEN`) |
+| `logship`, `sa-rules`, `clamav-sigs`, `valkey-role` | their units | see Code layout |
+
+Every root service of the web UI consumes its request file first and
+validates it again; see [Design decisions](design.md#root-services-for-the-web-ui).
+| `tests/system/run.sh` | `[render] [valkey] [galera] [acme] [netfilter] [js]` |
+
+## Environment variables of the scripts
+
+| Variable | Used by | Effect |
+| --- | --- | --- |
+| `SF_CONF` | all | Path of the configuration (default `/etc/spamfilter/spamfilter.conf`) |
+| `SF_ROOT` | `configure.sh`, `setup.sh`, cluster helpers | Prefix for every file written; renders into a scratch tree |
+| `SF_DRYRUN=y` | `configure.sh` | Do not run commands that change the system (systemctl, mysql, semanage, chown, ...), print them instead |
+| `SF_SRC` | `common.sh` | Repository root (default: derived from the script's location) |
+| `SF_ASN_RESPONSE` | `configure.sh` in dry runs | Result of the Spamhaus ASN check (`200` or `503`) |
+| `SF_GALERA_BOOTSTRAP=y` | `install.sh`, `configure.sh` | Create a new database cluster instead of joining (set by `setup.sh --ha`) |
+| `SKIP_CLAMD` | `setup.sh` | Preset the ClamAV question (`y`/`n`) |
+| `SF_TEST_WORK` | system tests | Work directory |
+
+## Shell library
+
+`system/lib/common.sh` (sourced by all scripts):
+
+| Function | Purpose |
+| --- | --- |
+| `log`, `warn`, `die` | Messages on stderr; `die` exits |
+| `p PATH` | `PATH` below `$SF_ROOT` |
+| `dry`, `run CMD...` | Dry-run test; run a system-changing command unless dry |
+| `write_file PATH MODE [OWNER]` | Write stdin atomically (temp file, mv, restorecon) |
+| `install_file SRC DEST MODE [OWNER]` | Copy a file with `write_file` |
+| `create_file PATH MODE [OWNER]` | Write only if the file does not exist |
+| `sync_tree SRC DEST` | Mirror a directory (deploy) |
+| `load_env_file FILE`, `load_config` | Read `KEY=value` files safely; read and validate the configuration |
+| `require_el10` | Root and EL10 check |
+| `selinux_port TYPE PORT` | Label a TCP port |
+| `run_hooks COMPONENT` | Run `data/hooks/COMPONENT/*` |
+
+`system/lib/cluster.sh` (sourced by `common.sh`):
+
+| Function | Purpose |
+| --- | --- |
+| `ha_enabled`, `ha_parse` | Is this a cluster; parse and validate `HA_*` into `HA_NODE_NAMES`, `HA_NODE_ADDRS`, `HA_WITNESS_*`, `HA_ROLE`, `HA_SELF_ADDR` |
+| `ha_voters`, `ha_quorum` | Number of votes, majority |
+| `ha_member_addrs`, `ha_peer_addrs`, `ha_node_peer_addrs` | Address lists |
+| `pki_create_ca`, `pki_issue`, `pki_install_node` | Cluster CA and member certificates |
+| `ha_bundle HOST FILE`, `ha_unbundle FILE` | Join bundles |
+| `galera_status VAR`, `valkey_tls HOST PORT ARGS` | Query the local Galera state, a member's Valkey or Sentinel |
+
+Also sourced by `common.sh`, and deployed to `/usr/local/lib/spamfilter/lib/`
+for the root services:
+
+| Library | Functions |
+| --- | --- |
+| `conf.sh` | `conf_set KEY VALUE`: change (or add) one setting in `spamfilter.conf` |
+| `tls.sh` | `tls_valid_min`, `tls_legacy`, `tls_nginx_protocols`, `tls_postfix_protocols`, `tls_postfix_config_file`, `tls_legacy_cnf`, `tls_nginx_dropin`: `HTTPS_TLS_MIN`/`SMTP_TLS_MIN` for nginx and Postfix |
+| `nginx.sh` | `nginx_server_names`, `nginx_names_conf`, `nginx_update_names`: the names nginx answers to (`/etc/nginx/spamfilter-server-names.conf`, included by the servers of the web UI); the root services rewrite it when the hostname or `ADDITIONAL_SAN` change |
+| `ipfamily.sh` | `ip_enabled`, `ip_postfix_inet_protocols`, `ip_postfix_address_preference`, `ip_unbound_lines`: `IPV4_ENABLED`/`IPV6_ENABLED` for the services |
+
+## Flask commands
+
+Run as the `spamfilter` user with the gateway's environment, e.g.
+`systemctl start spamfilter-job@sync`, or in development with
+`flask --app spamfilter <command>`:
+
+| Command | Purpose |
+| --- | --- |
+| `init-db` | Create and migrate tables, defaults, the initial admin, the statistics backfill, the maps (runs before the web UI starts) |
+| `sync` | Re-write the maps and the Valkey copies (DKIM and hash lookup keys) from the database |
+| `cleanup` | Expire the quarantine, mail log, audit log, reports, statistics and digest tokens, trim the Postfix log |
+| `send-digests` | Send due quarantine digests |
+| `sync-directories` | Synchronise the recipients of the directories |
+| `check-alerts` | Evaluate the alert checks and mail changes |
+| `siem-forward` | Send queued events to the SIEM (runs until stopped) |
+| `journal-send` | Send queued journal copies (runs until stopped) |
+| `cluster-report` | Cluster nodes: report this node's state into `cluster_reports` every 10 s and write requests for `cluster-node` from `cluster_control` (runs until stopped) |
+| `create-admin USERNAME` | Create an administrator (asks for the password) |
+| `reset-password [USERNAME]` | Reset (or create) an administrator, clear login throttling |
+| `reset-2fa USERNAME` | Turn off an administrator's two-factor login |
+
+The account commands are recorded in the audit log as `cli`.
+
+## Internal API
+
+`spamfilter-web-internal` on `127.0.0.1:8001`, for Rspamd only (loopback or
+`INTERNAL_CLIENTS`):
+
+| Endpoint | Caller | Content |
+| --- | --- | --- |
+| `GET /internal/rspamd/settings` | Rspamd settings map | Per-domain and per-user rules |
+| `POST /internal/mail-log` | metadata exporter | Every message for a protected domain or from a relay network |
+| `POST /internal/quarantine` | metadata exporter | Rejected messages |
+| `POST /internal/reports` | `SF_INTAKE_EXPORT` | Mail to `reports@<hostname>` |
+| `POST /internal/learn/spam`, `/internal/learn/ham` | `SF_INTAKE_EXPORT` | Mail to `spam@`/`ham@<hostname>`, with `X-Envelope-From`, `X-Client-IP`, `X-Relay-Network` |
+
+## Valkey keys
+
+| Key | Owner | Content |
+| --- | --- | --- |
+| `POSTFIX_MAILLOG` | logship | Mail log entries (JSON) for the web UI |
+| `F2B_CHANNEL` | logship, web app | Pub/sub channel netfilter watches |
+| `F2B_OPTIONS`, `F2B_REGEX` | netfilter, web app | Ban options and rules |
+| `F2B_ACTIVE_BANS`, `F2B_PERM_BANS`, `F2B_QUEUE_UNBAN` | netfilter, web app | Bans and unban requests |
+| `F2B_WHITELIST`, `F2B_BLACKLIST` | administrator | Never ban, always ban |
+| `WEB_LOGIN_FAILURES*` | web app | Login throttling counters |
+| `SF_JOB_LOCK:<job>` | web app | Job locks |
+| `DKIM_PRIV_KEYS`, `DKIM_SELECTORS` | web app | DKIM keys for Rspamd |
+| `ACME_FAIL_TIME` | acme | Last failed renewal, read by the watchdog |
+| `sf_rl:<seconds>:<sender>:<window>`, `sf_rl_hit:<sender>`, `sf_rl_hits` | Rspamd, web app | Outbound limit counters and deferred senders |
+| `sf_link:<id>`, `sf_link_verdict:<host>`, `sf_link_clicks` | Rspamd, web app | Link protection: URLs, cached verdicts, clicks |
+| `sf_hashcheck_keys`, `sf_hash:<source>:<sha256>`, `sf_vt_rate:<minute>`, `sf_hash_hits` | web app, Rspamd | Hash lookups: API keys, verdicts, VirusTotal rate, detections |
+| `sf_siem`, `sf_journal`, `sf_journal_status` | web app | Queues of the SIEM and journal senders |
+| `sf_alert_state` | web app | Failing alert checks and when they were mailed |
+| `sf_user_reports:<sender>:<hour>` | web app | Reporting limit per user |
+| `SF_JOB_LOCK:dmarc-report` | dmarc-report | One sender of DMARC reports per cluster |
+| `dmarc_idx*`, `dmarc_rpt*` | Rspamd | DMARC report data (two days) |
+| others | Rspamd | Bayes, fuzzy, greylisting, rate limits, history, neural |
