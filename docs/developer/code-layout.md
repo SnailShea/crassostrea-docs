@@ -19,8 +19,8 @@ system/
   libexec/                helpers deployed to /usr/local/libexec/spamfilter
     postfix-control         root helper for mail queue actions (socket-activated)
     log-reader              root helper that reads the journal of fixed units (socket-activated, Logs page)
-    postfix-apply           relay networks and message size limit into Postfix
-    set-hostname, tls-apply, network-apply   root services of the web UI (path units)
+    postfix-apply           relay networks, message size limit, rate limits, PTR check into Postfix
+    set-hostname, set-timezone, tls-apply, network-apply   root services of the web UI (path units)
     backup                  create, prune and request handling of backups
     dmarc-report            daily DMARC aggregate reports (rspamadm dmarc_report)
     logship                 journald -> Valkey (mail log, netfilter channel)

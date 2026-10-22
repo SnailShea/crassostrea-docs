@@ -18,8 +18,9 @@
 | --- | --- | --- |
 | `postfix-control` | `spamfilter-postfix-control.socket`, per connection | Mail queue actions of the web UI |
 | `log-reader` | `spamfilter-logs.socket`, per connection | The journal of a source (`{"source", "lines", "priority"}`) for Monitoring → Logs; the units of each source are listed in the helper only |
-| `postfix-apply` | `spamfilter-postfix-reload.path` | Message size limit and the SMTP rate limits (`rate_limits`: only the four `smtpd_client_*_limit` parameters, whole numbers) into `main.cf`, reload for the relay networks and the rate limit exceptions |
+| `postfix-apply` | `spamfilter-postfix-reload.path` | Message size limit, the SMTP rate limits (`rate_limits`: only the four `smtpd_client_*_limit` parameters, whole numbers) and the PTR check (`ptr_check`: `off`, `defer` or `reject` into `sf_ptr_check` and `unknown_client_reject_code`) into `main.cf`, reload for the relay networks, the rate limit exceptions and `client_exempt.cidr` |
 | `set-hostname` | `spamfilter-hostname.path` (`/var/lib/spamfilter/web/hostname`) | Hostname change |
+| `set-timezone` | `spamfilter-timezone.path` (`web/timezone`, kept) | `timedatectl set-timezone` for a name of the zone database, then `try-restart` of the services that read the zone at start (not MariaDB, Valkey); outcome in `/var/lib/spamfilter/timezone/status.json` |
 | `tls-apply` | `spamfilter-tls.path` (`web/tls-request.json`) | `le-test`, `le-apply`, `manual-apply`, `versions`; outcome in `/var/lib/spamfilter/tls/status.json` |
 | `network-apply` | `spamfilter-network.path` (`web/ip-request.json`) | IP addressing of one interface with test and rollback; checks the rule against the other interfaces and sets `IPV4_ENABLED`/`IPV6_ENABLED` from all of them; outcome in `/var/lib/spamfilter/network/status.json` |
 | `backup` | `spamfilter-backup.timer` (`create scheduled`, `prune`), `spamfilter-backup-request.path` (`request`), `backup.sh` (`create manual`) | Backups; outcome in `/var/lib/spamfilter/backups/status.json` |
@@ -98,6 +99,7 @@ Run as the `spamfilter` user with the gateway's environment, e.g.
 | `sync` | Re-write the maps and the Valkey copies (DKIM and hash lookup keys) from the database |
 | `cleanup` | Expire the quarantine, mail log, audit log, reports, statistics and digest tokens, trim the Postfix log |
 | `send-digests` | Send due quarantine digests |
+| `provision-accounts` | Create mailbox users for recipients of quarantined mail and mail them a link to set a password (when `mailbox_auto_create` is on) |
 | `sync-directories` | Synchronise the recipients of the directories |
 | `check-alerts` | Evaluate the alert checks and mail changes |
 | `siem-forward` | Send queued events to the SIEM (runs until stopped) |
@@ -106,6 +108,7 @@ Run as the `spamfilter` user with the gateway's environment, e.g.
 | `create-admin USERNAME` | Create an administrator (asks for the password) |
 | `reset-password [USERNAME]` | Reset (or create) an administrator, clear login throttling |
 | `reset-2fa USERNAME` | Turn off an administrator's two-factor login |
+| `admin-networks [--clear] [--add NETWORK]...` | Show or change the networks administrators may log in from |
 
 The account commands are recorded in the audit log as `cli`.
 

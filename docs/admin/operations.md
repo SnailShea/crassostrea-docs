@@ -40,7 +40,8 @@
 | `spamfilter-watchdog` | Health checks, restarts, notifications |
 | `spamfilter-postfix-control.socket` | Root helper for mail queue actions, started per request |
 | `spamfilter-logs.socket` | Root helper that reads the journal of the gateway's services for **Monitoring → Logs**, started per request |
-| `spamfilter-postfix-reload.path` | Applies the relay networks and the message size limit to Postfix when they change (`postfix-apply`) |
+| `spamfilter-postfix-reload.path` | Applies the relay networks, the message size limit, the rate limits and the PTR check to Postfix when they change (`postfix-apply`) |
+| `spamfilter-timezone.path` | Sets the time zone chosen in the web interface (`set-timezone`, see [Time zone](#time-zone)) |
 | `spamfilter-hostname.path`, `spamfilter-tls.path`, `spamfilter-network.path`, `spamfilter-backup-request.path` | Root services the web interface asks to change the hostname, certificates and TLS versions, IP addressing, and to make or delete backups; started while a request file in `/var/lib/spamfilter/web/` exists |
 | `spamfilter-cluster-report`, `spamfilter-cluster` | Cluster nodes only: report the node's state every 10 seconds and carry out maintenance, Valkey master and membership changes (root), see [Cluster page](high-availability.md#cluster-page) |
 | `valkey-sentinel`, `haproxy`, `keepalived`, `garb` | Cluster only, see [High availability](high-availability.md) |
@@ -54,11 +55,40 @@ Scheduled jobs (`systemctl list-timers 'spamfilter*'`):
 | `spamfilter-job-sync` | every 10 minutes (every minute in a cluster) | Re-write the maps from the database |
 | `spamfilter-job-directories` | every 15 minutes | Synchronise recipients from the [directories](directories.md) |
 | `spamfilter-job-alerts` | every 5 minutes | [Alert mail](monitoring.md#alert-mail) |
+| `spamfilter-job-accounts` | every 5 minutes | [Accounts for recipients of quarantined mail](quarantine.md#accounts-for-recipients-of-quarantined-mail), if turned on |
 | `spamfilter-backup` | daily 02:30 | [Backup](backups.md), then delete old scheduled ones |
 | `spamfilter-dmarc-report` | daily 01:15 | Send [DMARC reports](reports.md#sending-dmarc-reports), if turned on |
 | `spamfilter-sa-rules` | daily | Update the SpamAssassin rules |
 | `spamfilter-clamav-sigs` | every 12 hours | Update the Sanesecurity signatures |
 | `spamfilter-acme` | daily | Obtain or renew the certificate |
+
+Times of day are the servers' time zone.
+
+## Time zone
+
+**Settings → General → Time zone** sets the time zone of the whole gateway,
+on every node of a cluster:
+
+- The **web interface** shows times in it (with the zone's abbreviation, e.g.
+  `CEST`), including the dashboard's charts and the digests. It stores them in
+  UTC either way, so changing the zone changes nothing that was recorded.
+- The **servers** switch to it: the next sync of the maps (at once on the node
+  you save on, within the sync interval on the others) writes
+  `/var/lib/spamfilter/web/timezone`, and `spamfilter-timezone.path` runs
+  `set-timezone` as root, which sets it with `timedatectl` and restarts the
+  services that keep the zone they started with: Rspamd, Postfix, ClamAV,
+  Olefy, Unbound, nginx and the gateway's own services (the web interface too,
+  so reload the page if it does not answer for a moment). Scheduled jobs run
+  at their times in the new zone.
+- **MariaDB and Valkey** are not restarted: restarting every Galera node at
+  once could stop the database cluster. They use the new zone after their next
+  restart, e.g. the next update.
+
+The page shows the zone the servers use, and when the last change failed. With
+the zone empty (the default) the servers keep theirs, and the web interface
+shows UTC. A zone set on the command line (`timedatectl set-timezone`) stays
+until one is chosen in the web interface. The setting is `timezone` (an IANA
+name such as `Europe/Berlin`).
 
 ## Watchdog
 

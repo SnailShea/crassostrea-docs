@@ -41,6 +41,14 @@ Actions:
 | Delete | Removes it |
 | Download | The original message (`.eml`) |
 
+**The quarantine of one mailbox**: the quarantine count of each mailbox user
+(**Users → Mailbox users**), and **Quarantine** on a mailbox user's page, open
+the list for that address only: its inbound mail, including mail to its
+`+tag` sub-addresses (`/quarantine/?user=alice@example.com`, any address works,
+with or without an account). The mailbox user's page also shows its latest
+quarantined messages. Everything else works as on the full list. API:
+`GET /api/v1/quarantine?mailbox=alice@example.com`.
+
 Several messages can be released, learned or deleted at once from the list.
 Messages with a virus must be released one by one, with an explicit
 confirmation.
@@ -66,6 +74,38 @@ must be configured. They log in with their e-mail address and see:
 They never see outbound mail, other addresses or any gateway settings.
 Deleting a mailbox user keeps their quarantined mail for administrators and
 invalidates their digest links.
+
+**Send password link** on a mailbox user's page mails them a link to choose a
+new password themselves (also `POST /api/v1/mailbox-users/{id}/password-link`).
+The link works once, for "Password links valid for" days (Settings → General,
+default 7); a newer link replaces the older one. Like the digest links, its
+token is kept out of the web server's log and never sent to other sites.
+
+### Accounts for recipients of quarantined mail
+
+With **Create accounts for recipients of quarantined mail** (Settings →
+General, Quarantine and digests; off by default), a recipient of inbound
+quarantined mail who has no mailbox user gets one, when their mailbox exists
+on the domain's destination server, and a mail with a link to set their
+password. How the gateway knows the mailbox exists depends on the domain's
+[recipient check](domains.md):
+
+| Recipient check | The mailbox exists when |
+| --- | --- |
+| Recipient list, directory | The address is an active recipient |
+| Verify with the destination server | Always: Postfix verified it before it accepted the mail |
+| Accept all | The destination server accepts `RCPT TO` for it (`MAIL FROM:<>`, nothing is sent). A server that also accepts a made-up address of the domain cannot tell, and no account is created |
+
+Every 5 minutes (`spamfilter-job-accounts.timer`, `flask provision-accounts`,
+one node of a cluster) the mail quarantined in the last day is looked at, at
+most 100 recipients a run; an address the destination server refused or could
+not answer for is asked again after a day. Sub-addresses count as their
+mailbox (`alice+news@` → `alice@`). The account has a random password nobody
+knows until the recipient sets one; it is marked **invited** in the list until
+then. If the mail cannot be handed to Postfix, no account is created and the
+next run tries again. Created accounts are recorded in the audit log
+(`mailbox_user.auto_create`). Settings: `mailbox_auto_create`,
+`mailbox_invite_days`.
 
 ## Digests
 

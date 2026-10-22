@@ -29,7 +29,7 @@ their pages, and no tabs where only one page is left.
 | | Training | Teach Bayes and the fuzzy storage; reports from users, see [Filtering](filtering.md#training) |
 | Outbound | Outbound limits, Data loss prevention | See [Outbound mail](outbound.md) |
 | **System** | | |
-| Settings | General | Global thresholds, message limits and mail log retention, quarantine and digests, administrators (two-factor requirement, audit log retention) |
+| Settings | General | Global thresholds, message limits and mail log retention, quarantine and digests (and accounts for recipients of quarantined mail), virus scanning and the PTR check, administrators (two-factor requirement, audit log retention, allowed networks), the time zone |
 | | Branding | Name, colour, logo, footer, see [Branding](#branding) |
 | | Relay networks | The servers that may send outbound mail through the gateway, see [Domains and delivery](domains.md#outbound-mail) |
 | | Alerts & export | Prometheus token, SIEM export, alert mail, see [Monitoring](monitoring.md) |

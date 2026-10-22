@@ -86,7 +86,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 | Monitoring | `GET /monitoring/checks` (metrics for Prometheus: `/metrics`, see [Monitoring](monitoring.md)) |
 | Cluster | `GET /cluster`, `PUT /cluster/nodes/{node}/maintenance`, `POST /cluster/nodes/{node}/valkey-master`, `DELETE /cluster/nodes/{node}`, `DELETE /cluster/witness`, `POST /cluster/join-information`; on a single gateway `POST /cluster/create`, `POST /cluster/join` |
 | Administrators | `GET/POST /admins`, `GET/PATCH/DELETE /admins/{id}`, `POST /admins/{id}/reset-2fa` |
-| Mailbox users | `GET/POST /mailbox-users`, `GET/PATCH/DELETE /mailbox-users/{id}` |
+| Mailbox users | `GET/POST /mailbox-users`, `GET/PATCH/DELETE /mailbox-users/{id}`, `POST /mailbox-users/{id}/password-link` |
 | Personal lists | `GET/POST /mailbox-users/{id}/list-entries`, `DELETE /mailbox-users/{id}/list-entries/{eid}` |
 
 The field details are in the Swagger UI.

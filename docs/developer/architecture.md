@@ -10,13 +10,13 @@ programs of its own, all as systemd units on one EL10 host:
 | --- | --- | --- | --- |
 | Web interface (`spamfilter-web`) | Python, Flask, gunicorn | `spamfilter` | Admin UI, mailbox user portal, digest links, REST API, link protection (`/l/`), `/metrics` |
 | Internal API (`spamfilter-web-internal`) | same code, `create_app("internal")` | `spamfilter` | For Rspamd, loopback only: settings map, quarantine, mail log, DMARC/TLS reports, user reports |
-| Jobs (`spamfilter-job@<command>`) | Flask CLI | `spamfilter` | `cleanup`, `sync`, `send-digests`, `sync-directories`, `check-alerts`, `init-db` |
+| Jobs (`spamfilter-job@<command>`) | Flask CLI | `spamfilter` | `cleanup`, `sync`, `send-digests`, `provision-accounts`, `sync-directories`, `check-alerts`, `init-db` |
 | SIEM and journal senders (`spamfilter-siem`, `spamfilter-journal`) | Flask CLI, long-running | `spamfilter` | `siem-forward`, `journal-send`: drain queues in Valkey |
 | Cluster report (`spamfilter-cluster-report`) | Flask CLI, long-running | `spamfilter` | Cluster nodes: `cluster-report` writes the node's state into the database and its maintenance requests for `cluster-node` |
 | cluster-node (`spamfilter-cluster`) | Bash, long-running | root | Cluster nodes: probes Valkey and Sentinel over TLS, applies maintenance and Valkey master changes |
 | Postfix control (`spamfilter-postfix-control@`) | Python | root, per connection | Mail queue actions for the web UI |
 | Log reader (`spamfilter-logs@`) | Python | root, per connection | The journal of the services for the Logs page; only the units it lists |
-| Root services of the web UI | Bash, Python | root, per request | `set-hostname`, `tls-apply`, `network-apply`, `backup request`, `postfix-apply`: started by path units when the web UI writes a request (see [Design decisions](design.md#root-services-for-the-web-ui)) |
+| Root services of the web UI | Bash, Python | root, per request | `set-hostname`, `set-timezone`, `tls-apply`, `network-apply`, `backup request`, `postfix-apply`: started by path units when the web UI writes a request (see [Design decisions](design.md#root-services-for-the-web-ui)) |
 | backup, dmarc-report | Bash | root | Nightly backup and pruning, daily DMARC reports |
 | logship | Python | `spamfilter` + `systemd-journal` | Mail log from journald to Valkey |
 | netfilter | Python | root | Bans in nftables |

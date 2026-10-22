@@ -31,7 +31,12 @@ What answers without a login:
 - `/l/<id>`: only links the gateway rewrote (unknown ids get an error page,
   so it is no open redirector);
 - `/metrics`: only with the bearer token created under Settings → Alerts & export;
-- digest links: only with their token.
+- digest links: only with their token;
+- links to set a mailbox user's password (`/account/set-password/<token>`):
+  only with their token, once, until they expire.
+
+Administrator logins can be limited to networks you choose, see
+[Access by network](administrators.md#access-by-network).
 
 Port 25 also accepts mail for three addresses of the gateway's own hostname,
 which is not filtered but handed to the web interface: `reports@` (DMARC and
@@ -50,7 +55,7 @@ other address of the hostname is rejected.
 | MalwareBazaar and VirusTotal keys | the database and Valkey (for Rspamd), not in map files |
 | Two-factor secrets | the database; recovery codes as hashes |
 | Cluster CA key and member keys | `/etc/pki/spamfilter/` |
-| API keys, the metrics token, digest link tokens | stored as hashes only |
+| API keys, the metrics token, digest link and password link tokens | stored as hashes only |
 | Backups | `/var/lib/spamfilter/backups/` (root and group `spamfilter`; files 0640): they contain all of the above |
 
 Database dumps and Valkey dumps therefore contain secrets; protect backups

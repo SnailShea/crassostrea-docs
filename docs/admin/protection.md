@@ -13,6 +13,8 @@ within a minute.
 | [Link protection](#link-protection) | Link protection, domain settings | Off (per domain) |
 | [Content rules](#content-rules) | Content rules | None |
 | [Rate limits](#rate-limits) | Rate limits | 50 simultaneous connections per host; the others off |
+| [Virus scanning](#virus-scanning) | Settings → General | On (unless installed with `SKIP_CLAMD=y`) |
+| [Hosts without reverse DNS](#hosts-without-reverse-dns) | Settings → General | Accepted |
 
 Rules that reject a message work like any other rejection: the sender is told
 during the SMTP dialogue, and inbound mail of domains with a quarantine is
@@ -190,3 +192,44 @@ The limits are settings (`smtp_*_limit`, `inbound_*_limit`, `inbound_*_period`,
 and `POST /api/v1/rate-limits/reset` list and reset the deferred. Postfix applies
 its limits within seconds (`spamfilter-postfix-reload.path`, `postfix-apply`,
 kept by `configure.sh`), Rspamd within a minute.
+
+## Virus scanning
+
+ClamAV scans every message (with the Sanesecurity signatures); a virus
+rejects the message (`VIRUS_FOUND`), and inbound mail of domains with a
+quarantine is quarantined, where only administrators can release it. **Scan
+mail for viruses** in **Settings → General → Scanning** turns the scan off and
+on again without reinstalling: Rspamd skips the ClamAV check (`CLAM_VIRUS`)
+within a minute, clamd keeps running and keeps its signatures up to date. The
+attachment policy, the hash lookups and Olefy still apply. The setting is
+`virus_scanning` (`PATCH /api/v1/settings`), written to
+`/etc/rspamd/custom/scanning.map` for `rspamd.local.lua`.
+
+A gateway installed with `SKIP_CLAMD=y` has no ClamAV at all; the page says so,
+and the setting changes nothing there.
+
+## Hosts without reverse DNS
+
+Almost every mail server has a reverse DNS name (a PTR record) for its address;
+infected PCs and dial-up ranges often do not. **Hosts without a reverse DNS
+name (PTR)** in **Settings → General → Scanning** decides what Postfix does
+with them, before the message is transferred:
+
+| Setting | Postfix answers |
+| --- | --- |
+| Accept (default) | Nothing special: Rspamd adds a little score (`RDNS_NONE`) |
+| Defer | `450`: a real server retries, and passes once its PTR exists |
+| Reject | `550`: the mail is refused |
+
+A temporary DNS failure always defers, whatever the setting, so a broken
+resolver does not reject mail. The relay networks and the IP addresses and
+networks of the global [allow list](filtering.md#allow-and-block-lists) are
+exempt: add a partner's server there when it has no PTR. The rejection is
+logged in the Postfix log as `cannot find your reverse hostname`.
+
+Postfix's `reject_unknown_reverse_client_hostname` does the check
+(`sf_ptr_check` at the end of `smtpd_client_restrictions`, with
+`unknown_client_reject_code`), applied within seconds by
+`spamfilter-postfix-reload.path` and kept by `configure.sh`. The setting is
+`ptr_check` (`off`, `defer` or `reject`).
+

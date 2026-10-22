@@ -209,18 +209,19 @@ fills an empty table once from the mail log.
 ## Root services for the web UI
 
 The web UI runs unprivileged, but some pages change the system: the
-hostname, certificates and TLS versions, IP addressing, backups, and the
-Postfix size limit. They all follow one pattern:
+hostname, the time zone, certificates and TLS versions, IP addressing,
+backups, and the Postfix settings. They all follow one pattern:
 
 1. the web UI validates the input and writes a **request file** into
    `/var/lib/spamfilter/web/` (owned by `spamfilter`);
-2. a **path unit** (`PathExists=`, or `PathChanged=` for the Postfix files)
-   starts a root service: `set-hostname`, `tls-apply`, `network-apply`,
+2. a **path unit** (`PathExists=`, or `PathChanged=` for the Postfix files and
+   the time zone, which stay) starts a root service: `set-hostname`,
+   `set-timezone`, `tls-apply`, `network-apply`,
    `backup request`, `postfix-apply` in `system/libexec/`;
 3. the service **consumes** the request first (so the path unit does not loop
    on a bad one), **validates it again** (the web UI is not trusted), applies
    it, and writes its outcome as JSON to a root-owned directory the web UI
-   reads (`/var/lib/spamfilter/tls/`, `network/`, `backups/status.json`);
+   reads (`/var/lib/spamfilter/tls/`, `network/`, `timezone/`, `backups/status.json`);
 4. settings go into `spamfilter.conf` with `conf_set` (`system/lib/conf.sh`),
    so later `configure.sh` runs keep them.
 

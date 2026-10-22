@@ -40,6 +40,37 @@ A login ends 8 hours after it began (`WEB_SESSION_LIFETIME`), however active
 you are; live pages do not keep it alive. Closing the browser or logging out
 ends it earlier.
 
+### Access by network
+
+**Administrator access from** (Settings → General, Administrators) limits the
+networks administrators may use the web interface from: networks or addresses,
+one per line (`192.0.2.0/24`, `2001:db8::/48`, `198.51.100.7`); empty allows
+any. From another address an administrator login is refused before the
+password is checked, with the same answer whether the username exists or not,
+and a logged-in administrator whose address changes to one outside the list is
+logged out. The documentation at `/docs/` follows the same rule.
+
+- **Mailbox users** log in from anywhere; their logins use an address, which
+  administrator usernames cannot contain.
+- **API keys** are not affected; each key has its own allowed networks.
+- The settings page shows your address and refuses a list without it, so you
+  cannot lock yourself out by saving. If you are locked out anyway (a changed
+  office address), allow your address or empty the list on the server:
+
+```bash
+# the same user and environment as the web interface; --clear allows any address again
+sudo systemd-run --quiet --wait --pipe --collect --uid=spamfilter --gid=spamfilter \
+  --property=EnvironmentFile=/etc/spamfilter/spamfilter.conf \
+  --setenv=PYTHONPATH=/usr/local/lib/spamfilter/web --working-directory=/usr/local/lib/spamfilter/web \
+  /usr/local/lib/spamfilter/venv/bin/flask --app spamfilter admin-networks --add 203.0.113.0/24
+```
+
+Without options the command shows the list.
+
+The address is the one nginx sees. Behind a load balancer or a reverse proxy,
+make sure it passes the client's address (`X-Forwarded-For`), or the list
+matches the proxy. The setting is `admin_allowed_networks`.
+
 ## Two-factor login
 
 Administrators can protect their login with codes from an authenticator app
