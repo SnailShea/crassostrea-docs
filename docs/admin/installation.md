@@ -116,7 +116,8 @@ directory; without it, `DOCS_SOURCE` or the checkout next to the gateway's is
 used. The settings are `DOCS_ENABLED`, `DOCS_SOURCE` and `DOCS_REF` in
 `spamfilter.conf` ([Configuration reference](configuration.md#documentation)).
 `update.sh` also fetches the documentation's repository (a local checkout is
-fast-forwarded as its owner), and `configure.sh` rebuilds the site whenever
+fast-forwarded as its owner if it tracks a remote branch; otherwise, or if it
+has diverged, it is built as it is), and `configure.sh` rebuilds the site whenever
 its source changed. A failed build only warns: the previous site stays, and
 the gateway is not affected.
 
