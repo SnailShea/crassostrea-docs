@@ -123,6 +123,17 @@ See [Certificates](certificates.md).
 | `WATCHDOG_SUBJECT` | `Watchdog ALERT` | Subject prefix of notification mails |
 | `WATCHDOG_VERBOSE` | `n` | Verbose watchdog logging |
 
+### Documentation
+
+See [Documentation on the gateway](installation.md#documentation-on-the-gateway);
+change them with `system/docs.sh`.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `DOCS_ENABLED` | `n` | `y`: build this documentation and serve it at `/docs/` to logged-in administrators |
+| `DOCS_SOURCE` | empty | The `crassostrea-docs` repository: a git URL or a directory (no spaces or quotes). Empty: the checkout next to the gateway's (`../crassostrea-docs`) |
+| `DOCS_REF` | empty | Branch or tag of a git URL; empty: its default branch |
+
 ### High availability
 
 | Setting | Default | Meaning |

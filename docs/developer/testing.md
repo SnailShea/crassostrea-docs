@@ -84,7 +84,7 @@ tests/system/run.sh valkey galera   # selected
 | `render` | `setup.sh --ha --config-only`, join bundles and dry-run rendering of two nodes and a witness |
 | `valkey` | TLS-only replication with client certificates, Sentinel discovery and quorum, haproxy routing and pub/sub, failover, the old master returning as a replica, the read-only main configuration; `cluster-node`: its probe, making a node the master, maintenance (421 map, master handed over, priority 0 kept by `valkey-role`) and back |
 | `galera` | Bootstrap, the arbitrator, a full state transfer with mariabackup over TLS, multi-master writes, refusal of a node with a foreign certificate, failure and rejoin, loss of quorum |
-| `acme` | Two nginx instances answering each other's ACME challenges without loops; 404 for other names and addresses |
+| `acme` | Two nginx instances answering each other's ACME challenges without loops; 404 for other names and addresses; `/docs/` only after the web UI (a stub) allows it, otherwise the login page |
 | `netfilter` | Bans with real nftables on a single gateway, and shared bans between two nodes |
 | `js` | `static/app.js` in jsdom: in-place forms, confirmations, refresh, pausing, errors |
 

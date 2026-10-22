@@ -45,6 +45,7 @@ their pages, and no tabs where only one page is left.
 | | Audit log | Who changed what, see [Administrators and audit log](administrators.md#audit-log) |
 | | API keys | Keys for the [REST API](api.md) |
 | | API documentation | Swagger UI of the API |
+| Documentation | | This documentation at `https://<hostname>/docs/`, if it is [deployed on the gateway](installation.md#documentation-on-the-gateway) |
 | Rspamd UI | | `https://<hostname>/rspamd/`, password `RSPAMD_PASSWORD` |
 
 The addresses of the pages did not change with the menu (e.g. `/settings/networks`
@@ -94,4 +95,5 @@ API keys always have full access; only full administrators manage them.
 favicon, a footer text (shown on all pages and the login page, e.g. support
 contact details) and the default appearance (light, dark or following the
 system). The logo is shown above the name in the menu. The theme toggle in
-the menu lets each user override the appearance.
+the menu lets each user override the appearance. The API documentation
+follows the same light or dark appearance and accent colour.

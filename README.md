@@ -11,6 +11,15 @@ EL10, built with [MkDocs](https://www.mkdocs.org/) and the Material theme.
 - `docs/developer/`: developer guide (architecture, design decisions, code
   layout, development environment, testing, contributing)
 
+## On the gateway
+
+The gateway can build and serve this documentation at
+`https://<hostname>/docs/` for its administrators: `setup.sh --docs` (from a
+checkout of this repository next to the gateway's, e.g.
+`/opt/crassostrea-docs`), `setup.sh --docs-source <git URL or directory>`, or
+later `system/docs.sh install`. See "Documentation on the gateway" in the
+installation guide.
+
 ## Build and preview
 
 ```bash

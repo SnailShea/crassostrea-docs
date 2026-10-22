@@ -18,6 +18,7 @@
 | Delete all learning data (Bayes, fuzzy hashes, neural networks) | `sudo helper-scripts/reset-learns.sh` |
 | Turn SELinux denials into a local policy module | `sudo helper-scripts/selinux-local-policy.sh` |
 | Cluster state | **Cluster** page, or `sudo system/cluster.sh status` |
+| Documentation at `/docs/`: deploy, update, remove | `sudo system/docs.sh install\|update\|rebuild\|remove\|status`, see [Documentation on the gateway](installation.md#documentation-on-the-gateway) |
 | Put a cluster node into maintenance / take it out | `sudo system/cluster.sh maintenance on\|off [hostname]`, see [Maintenance](high-availability.md#maintenance) |
 
 ## Services

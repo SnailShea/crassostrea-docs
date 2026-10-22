@@ -10,6 +10,7 @@
 | `system/configure.sh` | `[--no-restart]`: deploy and render only |
 | `system/cluster.sh` | `status`, `bundle HOSTNAME [FILE]`, `members --nodes LIST [--witness H=A \| --no-witness]`, `members --standalone`, `maintenance on\|off [NODE] [--force]`, `bootstrap [--force]`, `leave` |
 | `system/backup.sh` | `create`, `list`, `restore NAME-OR-PATH [--yes]` |
+| `system/docs.sh` | `install [SOURCE] [--ref REF]`, `update`, `rebuild`, `remove`, `status` |
 
 ## Helpers in /usr/local/libexec/spamfilter
 
@@ -80,6 +81,7 @@ for the root services:
 | `conf.sh` | `conf_set KEY VALUE`: change (or add) one setting in `spamfilter.conf` |
 | `tls.sh` | `tls_valid_min`, `tls_legacy`, `tls_nginx_protocols`, `tls_postfix_protocols`, `tls_postfix_config_file`, `tls_legacy_cnf`, `tls_nginx_dropin`: `HTTPS_TLS_MIN`/`SMTP_TLS_MIN` for nginx and Postfix |
 | `nginx.sh` | `nginx_server_names`, `nginx_names_conf`, `nginx_update_names`: the names nginx answers to (`/etc/nginx/spamfilter-server-names.conf`, included by the servers of the web UI); the root services rewrite it when the hostname or `ADDITIONAL_SAN` change |
+| `docs.sh` | `docs_fetch [--update]`, `docs_build [--force]`, `docs_remove`, `docs_nginx_locations`: the documentation at `/docs/` (`DOCS_*`); the site is rebuilt when the hash of its source (`.sf-docs-source` in the site) changes |
 | `ipfamily.sh` | `ip_enabled`, `ip_postfix_inet_protocols`, `ip_postfix_address_preference`, `ip_unbound_lines`: `IPV4_ENABLED`/`IPV6_ENABLED` for the services |
 
 ## Flask commands

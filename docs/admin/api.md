@@ -3,7 +3,8 @@
 Everything the web interface manages, except branding, can be automated with
 the REST API at `https://<hostname>/api/v1/`. The interactive documentation
 (Swagger UI, OpenAPI 3) is at **API documentation** in the web interface
-(`/api/docs/`), the machine-readable document at `/api/v1/openapi.json`.
+(`/api/docs/`), in the light or dark appearance of the web interface; the
+machine-readable document is at `/api/v1/openapi.json`.
 
 The API applies the same rules as the web interface: both use the same
 service layer, so validation and side effects (map updates, DKIM copies,

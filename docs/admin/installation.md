@@ -19,7 +19,9 @@ sudo ./setup.sh
 3. **Creates the configuration** `/etc/spamfilter/spamfilter.conf`: it asks
    for the gateway's hostname (the name your MX records will point to),
    generates random passwords and keys, detects IPv6, offers to disable ClamAV
-   on small hosts, and checks whether Spamhaus blocks your network.
+   on small hosts, asks whether to serve this
+   [documentation](#documentation-on-the-gateway) on the gateway, and checks
+   whether Spamhaus blocks your network.
 4. **Checks the hostname**: it warns if the name does not resolve, or resolves
    to an address that is not on this host (expected behind NAT).
 5. **Installs** (`system/install.sh`): enables EPEL, CRB and the official
@@ -45,6 +47,9 @@ sudo ./setup.sh --hostname filter.example.com --yes
 | `--yes` | No questions; needs `--hostname` for a new configuration; disables ClamAV on hosts with 2.5 GiB RAM or less |
 | `--config-only` | Stop after writing the configuration, e.g. to edit it before installing; run `setup.sh` again to install |
 | `--reconfigure` | Create a new configuration with new passwords even if one exists; the old file is kept as `spamfilter.conf.bak` (copy over the settings you had changed) |
+| `--docs` | Also serve the [documentation](#documentation-on-the-gateway), from the `crassostrea-docs` checkout next to the gateway's (`/opt/crassostrea-docs`) |
+| `--docs-source SOURCE` | The same, from `SOURCE`: a git URL or a directory of the `crassostrea-docs` repository |
+| `--no-docs` | Do not serve it, and do not ask |
 | `--ha`, `--ha-*`, `--join` | Clusters, see [High availability](high-availability.md) |
 
 ## First steps
@@ -74,6 +79,49 @@ The hostname, the IP addressing and the certificate can later be changed in
 the web interface ([Hostname, IP addressing and DNS](network.md),
 [Certificates and TLS](certificates.md)).
 
+## Documentation on the gateway
+
+The gateway can serve this documentation at `https://<hostname>/docs/`, to
+logged-in administrators only (domain administrators included, not mailbox
+users). The menu of the web interface then has a **Documentation** link.
+Anyone else is sent to the login page and back to the page they asked for.
+
+It is built from the `crassostrea-docs` repository with MkDocs, in its own
+Python environment (`/usr/local/lib/spamfilter/docs-venv`), into
+`/usr/local/share/spamfilter/docs`. The build loads no web fonts; pages load
+nothing from elsewhere except the scripts of Mermaid diagrams.
+
+**At installation**: answer *yes* to the question of `setup.sh`, or use
+`--docs` / `--docs-source SOURCE`. With the default source, clone the docs
+next to the gateway:
+
+```bash
+git clone <docs repository URL> /opt/crassostrea-docs
+git clone <repository URL> /opt/crassostrea && cd /opt/crassostrea
+sudo ./setup.sh --docs
+```
+
+**Later**, on an installed gateway:
+
+| Task | Command |
+| --- | --- |
+| Deploy it | `sudo system/docs.sh install [SOURCE] [--ref BRANCH-OR-TAG]` |
+| Get new commits of the source and rebuild if they changed it | `sudo system/docs.sh update` |
+| Build again from the source as it is | `sudo system/docs.sh rebuild` |
+| Stop serving it and remove the site | `sudo system/docs.sh remove` |
+| Source, last build, whether it is up to date | `sudo system/docs.sh status` |
+
+`SOURCE` is a git URL (cloned to `/var/lib/spamfilter/docs-src`) or a
+directory; without it, `DOCS_SOURCE` or the checkout next to the gateway's is
+used. The settings are `DOCS_ENABLED`, `DOCS_SOURCE` and `DOCS_REF` in
+`spamfilter.conf` ([Configuration reference](configuration.md#documentation)).
+`update.sh` also fetches the documentation's repository (a local checkout is
+fast-forwarded as its owner), and `configure.sh` rebuilds the site whenever
+its source changed. A failed build only warns: the previous site stays, and
+the gateway is not affected.
+
+In a cluster every node has its own setting and site.
+
 ## Updating
 
 ```bash
@@ -81,8 +129,8 @@ cd /opt/crassostrea
 sudo ./update.sh
 ```
 
-`update.sh` fast-forwards the git checkout (as the owner of the checkout),
-then runs `system/install.sh`: packages, Python packages, pinned tools, the
+`update.sh` fast-forwards the git checkout (as the owner of the checkout) and,
+if it is deployed, the documentation's repository, then runs `system/install.sh`: packages, Python packages, pinned tools, the
 deployment of the code and the configuration, the database migration, and a
 restart of the services. Options: `--skip-git` (no `git pull`), `--force` (no
 confirmation).

@@ -108,6 +108,15 @@ domain: `ps -eZ | grep spamfilter` should show `unconfined_service_t`, not
 If a denial blocks something legitimate, report it, and meanwhile build a local
 module with `sudo helper-scripts/selinux-local-policy.sh`.
 
+## Documentation on the gateway
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `/docs/` sends you to the login page although you are logged in | The login ended, or two-factor login must still be set up: log in again |
+| `/docs/` answers 404 | The site was not built: `sudo system/docs.sh status`, then `rebuild`; the build's messages show why |
+| "No documentation to build" in `configure.sh` | `DOCS_SOURCE` is empty and there is no `crassostrea-docs` next to the gateway's checkout: `sudo system/docs.sh install SOURCE` |
+| `/docs/` shows an old version | `sudo system/docs.sh update` (or `rebuild` for a local directory with uncommitted changes) |
+
 ## Cluster
 
 | Symptom | Cause and fix |

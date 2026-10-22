@@ -7,6 +7,7 @@ system/
   install.sh              repositories, packages, user, venv, pinned tools, SELinux; calls configure.sh
   configure.sh            deploys the code and renders every service's configuration
   cluster.sh              cluster status, join bundles, membership changes, maintenance, bootstrap, leave
+  docs.sh                 deploy, update or remove the documentation at /docs/
   backup.sh               backups: create, list, restore
   lib/common.sh           shared helpers: logging, write_file/create_file, load_env_file, load_config
   lib/cluster.sh          cluster helpers: HA_* parsing and validation, cluster CA, bundles
@@ -14,6 +15,7 @@ system/
   lib/tls.sh              oldest TLS versions of nginx and Postfix, the legacy OpenSSL configuration
   lib/ipfamily.sh         IPV4_ENABLED/IPV6_ENABLED for Postfix, unbound and nginx
   lib/nginx.sh            the names nginx answers to (other names and addresses: 404)
+  lib/docs.sh             the documentation at /docs/: fetch, build with MkDocs, nginx locations
   libexec/                helpers deployed to /usr/local/libexec/spamfilter
     postfix-control         root helper for mail queue actions (socket-activated)
     postfix-apply           relay networks and message size limit into Postfix
@@ -54,7 +56,8 @@ data/
                               /metrics, render_live, protected_blueprint and the domain scope
       api/                    REST API: __init__ (auth, helpers), accounts, configuration, operations, spec
       templates/              Jinja templates; _*_live.html and */_live.html are live region partials
-      static/                 app.css, app.js
+      static/                 app.css, app.js; swagger-init.js and swagger-theme.css (Swagger UI in
+                              the colours of app.css, light and dark)
     tests/                  pytest suite
 services/
   netfilter/              ban daemon (main.py, modules/HostNFTables.py)
