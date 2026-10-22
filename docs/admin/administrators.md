@@ -2,16 +2,16 @@
 
 ## Administrators
 
-**Access → Administrators** manages the accounts of the web interface. There
+**Users → Administrators** manages the accounts of the web interface. There
 are two roles:
 
 | Role | Can |
 | --- | --- |
 | Administrator | Everything |
-| Domain administrator | Only the mail of the domains assigned to them: their quarantine (inbound, and outbound mail sent from their domains), the mail log, their domains' settings, recipients, lists and DKIM keys, their mailbox users, statistics and DMARC/TLS reports |
+| Domain administrator | Only the mail of the domains assigned to them: their quarantine (inbound, and outbound mail sent from their domains), the mail log, their domains' settings, recipients, lists and DKIM keys, their mailbox users, the dashboard's statistics and DMARC/TLS reports |
 
 Domain administrators cannot add or delete domains, and see none of the
-system pages (settings, mail queue, Postfix log, global lists and filters,
+system pages (settings, mail queue, logs, monitoring, global lists and filters,
 certificates, backups, API keys, other administrators, ...); opening one
 leads to the quarantine. They re-queue mail from the mail log only to
 recipients in their domains (outbound mail of their domains to any of its

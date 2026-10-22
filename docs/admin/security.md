@@ -30,7 +30,7 @@ What answers without a login:
 
 - `/l/<id>`: only links the gateway rewrote (unknown ids get an error page,
   so it is no open redirector);
-- `/metrics`: only with the bearer token created on the Monitoring page;
+- `/metrics`: only with the bearer token created under Settings → Alerts & export;
 - digest links: only with their token.
 
 Port 25 also accepts mail for three addresses of the gateway's own hostname,

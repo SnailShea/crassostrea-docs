@@ -50,7 +50,12 @@ Guidelines:
 
 Other test files cover the live regions (`test_live.py`, fragments and
 in-place forms), the cluster features of the app (`test_cluster.py`), the
-Postfix control helper over a real unix socket (`test_postfix_control.py`),
+Postfix control helper and the log reader over a real unix socket
+(`test_postfix_control.py`, `test_logs.py`), the decisions of `network-apply`
+with several interfaces (`test_network_apply.py`), building a cluster
+(`test_cluster_build.py`: the join handshake, and `cluster-setup` against a TLS
+server with a pinned certificate) and `cluster-node` applying a membership with
+stubbed commands (`test_cluster_node.py`),
 and one file per feature (`test_maillog.py`, `test_stats.py`,
 `test_domain_admins.py`, `test_directory.py`, `test_links.py`, ...).
 
@@ -81,10 +86,10 @@ tests/system/run.sh valkey galera   # selected
 
 | Test | Checks |
 | --- | --- |
-| `render` | `setup.sh --ha --config-only`, join bundles and dry-run rendering of two nodes and a witness |
+| `render` | `setup.sh --ha --config-only`, join bundles and dry-run rendering of two nodes and a witness, and of a one-node cluster |
 | `valkey` | TLS-only replication with client certificates, Sentinel discovery and quorum, haproxy routing and pub/sub, failover, the old master returning as a replica, the read-only main configuration; `cluster-node`: its probe, making a node the master, maintenance (421 map, master handed over, priority 0 kept by `valkey-role`) and back |
 | `galera` | Bootstrap, the arbitrator, a full state transfer with mariabackup over TLS, multi-master writes, refusal of a node with a foreign certificate, failure and rejoin, loss of quorum |
-| `acme` | Two nginx instances answering each other's ACME challenges without loops; 404 for other names and addresses; `/docs/` only after the web UI (a stub) allows it, otherwise the login page |
+| `acme` | Two nginx instances answering each other's ACME challenges without loops; 404 for other names and addresses; `/docs/` only after the web UI (a stub) allows it, otherwise the login page; the configuration of a one-node cluster passes `nginx -t` |
 | `netfilter` | Bans with real nftables on a single gateway, and shared bans between two nodes |
 | `js` | `static/app.js` in jsdom: in-place forms, confirmations, refresh, pausing, errors |
 

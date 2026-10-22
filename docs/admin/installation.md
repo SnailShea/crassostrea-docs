@@ -71,7 +71,7 @@ sudo ./setup.sh --hostname filter.example.com --yes
 6. Open **Network → DNS & ports**: it checks the hostname's records, each
    domain's MX, DKIM, SPF and DMARC, and the ports, from the server.
 7. Send a test message from outside and follow it under **Mail log** and
-   **Postfix log**.
+   the Postfix log (**Monitoring → Logs**).
 8. Check the nightly [backups](backups.md) and copy them off the server, and
    connect [monitoring](monitoring.md).
 

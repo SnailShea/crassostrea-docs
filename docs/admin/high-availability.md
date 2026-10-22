@@ -50,8 +50,8 @@ ports are only opened to the other members (firewalld zone
 
 Every member has one vote. The database only accepts writes, and Valkey only
 fails over, while a **majority** of the votes is reachable: a node that is cut
-off from the others stops instead of diverging. A cluster therefore needs at
-least three votes:
+off from the others stops instead of diverging. A cluster therefore survives
+the failure of a member only from three votes on:
 
 - **Full nodes only**: three or more nodes.
 - **Full nodes and a witness**: two (or any even number of) nodes plus a small
@@ -61,10 +61,13 @@ least three votes:
   split continues.
 
 With an odd number of votes the cluster survives the loss of
-`(votes - 1) / 2` members, e.g. one of three. Configurations with fewer than
-three votes are refused; with an even number setup warns.
+`(votes - 1) / 2` members, e.g. one of three. Like Proxmox, a cluster may
+start with one node and grow: with one or two votes it works, but a failure
+stops it (with two nodes, either node's failure stops both). Monitoring → Cluster,
+Settings → Cluster and `configure.sh` warn until there are three votes; with an even number they
+warn about network splits.
 
-The mode is chosen during setup and can be changed later, see
+Members can be added and removed at any time, see
 [Changing the members](#changing-the-members).
 
 ## Requirements
@@ -90,23 +93,61 @@ Ports between the members, opened automatically and only for the members:
 
 ## Setting up a cluster
 
-### 1. The first node
+Like a Proxmox cluster, a cluster is built in the web interface: create it on
+one gateway, then join the others to it one after another. Install every
+gateway first (`setup.sh`, see [Installation](installation.md)).
 
-On a new host, or on an installed gateway (which keeps its data):
+### In the web interface
+
+1. **Create the cluster.** On the first gateway, **Settings → Cluster** shows
+   **Create a cluster**: choose this server's **cluster address** (the IPv4
+   address on which the members reach each other, ideally on a private
+   network) and optionally a [floating address](#floating-address). The gateway
+   keeps its domains, settings and data; it installs the database cluster,
+   Valkey replication and the cluster CA, and restarts its services (the web
+   interface too: reload the page). This takes a few minutes; the page shows
+   the progress and the log.
+2. **Join information.** Under Settings → Cluster of a member, **Add a node →
+   Join information** shows a text starting with `sfjoin1.`. It names the
+   member (hostname, cluster address), the SHA-256 fingerprint of its HTTPS
+   certificate and a one-time secret; it works once, for an hour. Treat it like
+   a password.
+3. **Join.** Under Settings → Cluster of the new gateway, **Join a cluster**: paste the
+   join information and choose this server's cluster address. Its root service
+   (`spamfilter-cluster-setup`) contacts the member over HTTPS at the member's
+   cluster address, accepted only with the certificate of the fingerprint. The
+   member adds the new gateway to the cluster's membership; **every member
+   then opens its firewall and updates its configuration by itself** (Galera,
+   haproxy, Sentinel's quorum, keepalived). The member hands out the join bundle
+   (configuration, passwords, cluster CA), and the new gateway installs it with
+   `setup.sh --join`: it copies the database (mariabackup over TLS) and Valkey
+   from the running nodes. Several minutes; the page shows the progress.
+
+!!! warning
+    Joining **replaces** the joining gateway's domains, accounts, settings,
+    quarantine, mail log and learned data with the cluster's. Its own name, IP
+    families, TLS versions and certificate settings stay. Afterwards log in
+    with an account of the cluster.
+
+The same in the API: `POST /api/v1/cluster/create`,
+`POST /api/v1/cluster/join-information` (on a member),
+`POST /api/v1/cluster/join` (on the new gateway), `GET /api/v1/cluster` for the
+progress (`setup`).
+
+Add a third node (or a [witness](#a-witness-host)) for a cluster that
+survives a failure.
+
+### On the command line
+
+The first node, on a new host or an installed gateway (which keeps its data):
 
 ```bash
 sudo ./setup.sh --ha
 ```
 
-It asks for:
-
-- the **full nodes** as `hostname=address`, this one first, e.g.
-  `mx1.example.com=10.0.0.1,mx2.example.com=10.0.0.2`;
-- the **quorum mode** and, with a witness, its `hostname=address`;
-- an optional **floating address** for the web interface.
-
-It then creates the cluster CA, installs the node and creates the database
-cluster. Unattended:
+It asks for the full nodes as `hostname=address` (this one first; one node is
+enough, the others can join later), the quorum mode with an optional witness,
+and an optional floating address. Unattended:
 
 ```bash
 sudo ./setup.sh --hostname mx1.example.com --yes --ha \
@@ -114,23 +155,34 @@ sudo ./setup.sh --hostname mx1.example.com --yes --ha \
   --ha-witness witness.example.com=10.0.0.3 --ha-vip none
 ```
 
-### 2. The other members
-
-The first node leaves a **join bundle** per member in
-`/root/spamfilter-join-<hostname>.tar`. It contains the configuration with all
-passwords and the cluster CA: copy it securely (e.g. `scp`) and delete it
-afterwards. On each other member, one after another:
+It leaves a **join bundle** per listed member in
+`/root/spamfilter-join-<hostname>.tar` (also `system/cluster.sh bundle
+HOSTNAME` on a full node). It contains the configuration with all passwords and
+the cluster CA: copy it securely (e.g. `scp`) and delete it afterwards. On each
+other member, one after another:
 
 ```bash
 git clone <repository URL> /opt/crassostrea && cd /opt/crassostrea
 sudo ./setup.sh --join /root/spamfilter-join-mx2.example.com.tar
 ```
 
-A new node copies the database (mariabackup over TLS) and Valkey from the
-running nodes before it reports ready. The witness installs only the
-arbitrator and Sentinel.
+### A witness host
 
-### 3. DNS and names
+The witness runs no web interface: it is added on the command line. On a full
+node, add it to the members (the other nodes apply it by themselves) and
+create its bundle:
+
+```bash
+sudo system/cluster.sh members --nodes <the nodes> --witness witness.example.com=10.0.0.3
+sudo system/cluster.sh bundle witness.example.com
+```
+
+then `sudo ./setup.sh --join /root/spamfilter-join-witness.example.com.tar` on
+the witness. It does not see later changes of the nodes by itself: after
+adding or removing a node, run `system/cluster.sh members` there too; the
+Settings → Cluster shows the command with the current members.
+
+### DNS and names
 
 - One **MX record per full node**. Equal preference shares the load; different
   preferences make one node the primary.
@@ -157,22 +209,25 @@ followed by `system/configure.sh` there. A member restarts its database,
 Valkey and Sentinel only when their configuration changed, so running
 `configure.sh` does not cause a failover.
 
-**Update** the members one at a time, so the others keep the majority, each
+**Update** the members one at a time, so the others keep the majority (a
+cluster of one or two nodes stops while one is updated), each
 in [maintenance](#maintenance): maintenance on, wait until its queue is empty,
-`update.sh`, check on the Cluster page that it is in sync, maintenance off.
+`update.sh`, check on Monitoring → Cluster that it is in sync, maintenance off.
 
 | Task | Command |
 | --- | --- |
-| State of the cluster | The [Cluster page](#cluster-page), or `sudo system/cluster.sh status` |
-| Maintenance | **Maintenance** on the Cluster page, or `sudo system/cluster.sh maintenance on\|off [<hostname>]` |
+| State of the cluster | **Monitoring → Cluster** ([Cluster page](#cluster-page)), or `sudo system/cluster.sh status` |
+| Maintenance | **Maintenance** under Settings → Cluster, or `sudo system/cluster.sh maintenance on\|off [<hostname>]` |
+| Add a node | Join information under Settings → Cluster, **Join a cluster** there on the new gateway |
+| Remove a node that is switched off | **Remove** under Settings → Cluster |
 | Join bundle for a member | `sudo system/cluster.sh bundle <hostname>` |
 | Start the database after all nodes were down | `sudo system/cluster.sh bootstrap` |
 | Leave the cluster (before removing a member) | `sudo system/cluster.sh leave` |
 
-The mail queue, Rspamd's scan counters on the dashboard and the service list
-on the dashboard are those of the node you are logged in to; the Cluster page
-shows every node, and the Postfix log, the mail log and the statistics show
-all nodes.
+The mail queue, the service list (Monitoring) and the logs other than the
+Postfix log are those of the node you are logged in to; the Cluster page shows
+every node, and the Postfix log, the mail log and the dashboard's statistics
+show all nodes.
 
 **Backups** are made on every node; a member is never restored from one (see
 [Backups](backups.md#clusters)). **Renaming a member** means replacing it:
@@ -181,7 +236,8 @@ all nodes.
 ## Cluster page
 
 **Monitoring → Cluster** shows the cluster from the reports of its nodes, on any
-node, and updates itself every 10 seconds:
+node; maintenance, the Valkey master and the members are managed under
+**Settings → Cluster**. It updates itself every 10 seconds:
 
 - the overall state (healthy, degraded, critical), the votes in the database
   cluster and the majority they need, the nodes reporting, the Valkey master
@@ -233,7 +289,7 @@ A node in maintenance:
 - fails the keepalived health check, so the floating address moves;
 - keeps delivering the mail in its queue, and its web interface keeps working.
 
-Turn it on with **Maintenance** on the Cluster page (on any node, for any node),
+Turn it on with **Maintenance** under **Settings → Cluster** (on any node, for any node),
 `PUT /api/v1/cluster/nodes/<hostname>/maintenance` with `{"enabled": true}`, or
 `sudo system/cluster.sh maintenance on [<hostname>]` (`off` to end it). It is
 refused when no other node is reporting, in sync and out of maintenance, as
@@ -256,31 +312,32 @@ haproxy within a second or two.
 
 ## Changing the members
 
-Membership is `HA_NODES` and `HA_WITNESS` in `spamfilter.conf`.
-`system/cluster.sh members` changes them on one member and applies the change;
-run it with the same arguments **on every member**, one after another.
+The membership is stored in the cluster's database (`cluster_membership`):
+every node applies a change by itself within a minute (`HA_NODES` and
+`HA_WITNESS` in its `spamfilter.conf`, firewall, Galera, haproxy, Sentinel,
+keepalived; done by `spamfilter-cluster`, without restarting the database).
 
-**Add a node or a witness.** First update the existing members, so their
-firewalls let the new host in:
+**Add a node**: [join it](#setting-up-a-cluster) with a join information.
 
-```bash
-sudo system/cluster.sh members \
-  --nodes mx1.example.com=10.0.0.1,mx2.example.com=10.0.0.2,mx3.example.com=10.0.0.4 \
-  --witness witness.example.com=10.0.0.3
-```
+**Remove a node**, like `pvecm delnode`: switch it off for good (or run
+`sudo system/cluster.sh leave` on it, which stops and disables its services),
+then **Remove** next to it under Settings → Cluster of another node (also
+`DELETE /api/v1/cluster/nodes/<hostname>`). Only a node that has not reported
+for a minute can be removed. Do not start it again with this cluster's data:
+reinstall it to use it again.
 
-Then create its bundle on a full node (`system/cluster.sh bundle
-mx3.example.com`) and run `setup.sh --join` on the new host.
+**Add or remove the witness**: on a full node, `sudo system/cluster.sh members
+--nodes <nodes> --witness host=address` (then join the witness with its
+bundle) or `--no-witness` (then `leave` on the witness). Settings → Cluster can
+also remove the witness.
 
-**Remove a member.** Run `sudo system/cluster.sh leave` on it (stops and
-disables its services), then `members` without it on the others.
-
-**Change the quorum mode.** Add a witness (`--witness host=address`, then join
-it) or remove it (`--no-witness`, then `leave` on the witness). A change that
-would leave fewer than three votes is refused.
+On the command line, `system/cluster.sh members --nodes ...` changes the
+membership for every node as well (it writes the database); a node whose
+database does not answer is changed only itself.
 
 **Back to a single gateway.** After the other members left, run
-`sudo system/cluster.sh members --standalone` on the remaining node.
+`sudo system/cluster.sh members --standalone` on the remaining node; it can
+create a new cluster later.
 
 ## Failures
 

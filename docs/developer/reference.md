@@ -8,7 +8,7 @@
 | `update.sh` | `[--skip-git] [--force]` |
 | `system/install.sh` | no options; run by `setup.sh` and `update.sh` |
 | `system/configure.sh` | `[--no-restart]`: deploy and render only |
-| `system/cluster.sh` | `status`, `bundle HOSTNAME [FILE]`, `members --nodes LIST [--witness H=A \| --no-witness]`, `members --standalone`, `maintenance on\|off [NODE] [--force]`, `bootstrap [--force]`, `leave` |
+| `system/cluster.sh` | `status`, `bundle HOSTNAME [FILE]`, `members --nodes LIST [--witness H=A \| --no-witness]` (also writes the cluster's membership: the other nodes apply it), `members --standalone`, `maintenance on\|off [NODE] [--force]`, `bootstrap [--force]`, `leave` |
 | `system/backup.sh` | `create`, `list`, `restore NAME-OR-PATH [--yes]` |
 | `system/docs.sh` | `install [SOURCE] [--ref REF]`, `update`, `rebuild`, `remove`, `status` |
 
@@ -17,14 +17,16 @@
 | Helper | Started by | Does |
 | --- | --- | --- |
 | `postfix-control` | `spamfilter-postfix-control.socket`, per connection | Mail queue actions of the web UI |
-| `postfix-apply` | `spamfilter-postfix-reload.path` | Message size limit into `main.cf`, reload for the relay networks |
+| `log-reader` | `spamfilter-logs.socket`, per connection | The journal of a source (`{"source", "lines", "priority"}`) for Monitoring → Logs; the units of each source are listed in the helper only |
+| `postfix-apply` | `spamfilter-postfix-reload.path` | Message size limit and the SMTP rate limits (`rate_limits`: only the four `smtpd_client_*_limit` parameters, whole numbers) into `main.cf`, reload for the relay networks and the rate limit exceptions |
 | `set-hostname` | `spamfilter-hostname.path` (`/var/lib/spamfilter/web/hostname`) | Hostname change |
 | `tls-apply` | `spamfilter-tls.path` (`web/tls-request.json`) | `le-test`, `le-apply`, `manual-apply`, `versions`; outcome in `/var/lib/spamfilter/tls/status.json` |
-| `network-apply` | `spamfilter-network.path` (`web/ip-request.json`) | IP addressing with test and rollback; outcome in `/var/lib/spamfilter/network/status.json` |
+| `network-apply` | `spamfilter-network.path` (`web/ip-request.json`) | IP addressing of one interface with test and rollback; checks the rule against the other interfaces and sets `IPV4_ENABLED`/`IPV6_ENABLED` from all of them; outcome in `/var/lib/spamfilter/network/status.json` |
 | `backup` | `spamfilter-backup.timer` (`create scheduled`, `prune`), `spamfilter-backup-request.path` (`request`), `backup.sh` (`create manual`) | Backups; outcome in `/var/lib/spamfilter/backups/status.json` |
 | `dmarc-report` | `spamfilter-dmarc-report.timer` | `rspamadm dmarc_report` if the web UI allows it, under a job lock |
 | `acme` | `spamfilter-acme.timer`; `--staging-test NAME...` by `tls-apply` | Certificate |
-| `cluster-node` | `spamfilter-cluster.service` (long-running, cluster nodes) | Every 10 s: probes Valkey, Sentinel and the floating address into `/var/lib/spamfilter/cluster/probe.json`, keeps maintenance in effect; applies `web/cluster-request` (`maintenance=on\|off`, `promote=TOKEN`) |
+| `cluster-node` | `spamfilter-cluster.service` (long-running, cluster nodes) | Every 10 s: probes Valkey, Sentinel and the floating address into `/var/lib/spamfilter/cluster/probe.json`, keeps maintenance in effect; applies `web/cluster-request` (`maintenance=on\|off`, `promote=TOKEN`, `members=`/`witness=`: the membership) and `web/cluster-bundle` (membership and `host=`: writes that host's join bundle to `/var/lib/spamfilter/cluster-bundles/`) |
+| `cluster-setup` | `spamfilter-cluster-setup.path` (`web/cluster-setup.json`) | A single gateway creating (`setup.sh --ha`) or joining a cluster (join information: pinned HTTPS to the member, then `setup.sh --join`); outcome in `/var/lib/spamfilter/cluster-setup/status.json` |
 | `logship`, `sa-rules`, `clamav-sigs`, `valkey-role` | their units | see Code layout |
 
 Every root service of the web UI consumes its request file first and
@@ -134,6 +136,7 @@ The account commands are recorded in the audit log as `cli`.
 | `DKIM_PRIV_KEYS`, `DKIM_SELECTORS` | web app | DKIM keys for Rspamd |
 | `ACME_FAIL_TIME` | acme | Last failed renewal, read by the watchdog |
 | `sf_rl:<seconds>:<sender>:<window>`, `sf_rl_hit:<sender>`, `sf_rl_hits` | Rspamd, web app | Outbound limit counters and deferred senders |
+| `sf_irl:<kind>:<seconds>:<key>:<window>`, `sf_irl_hit:<kind>:<key>`, `sf_irl_hits` | Rspamd, web app | Inbound rate limit counters (kind ip, rcpt, bounce) and the deferred |
 | `sf_link:<id>`, `sf_link_verdict:<host>`, `sf_link_clicks` | Rspamd, web app | Link protection: URLs, cached verdicts, clicks |
 | `sf_hashcheck_keys`, `sf_hash:<source>:<sha256>`, `sf_vt_rate:<minute>`, `sf_hash_hits` | web app, Rspamd | Hash lookups: API keys, verdicts, VirusTotal rate, detections |
 | `sf_siem`, `sf_journal`, `sf_journal_status` | web app | Queues of the SIEM and journal senders |

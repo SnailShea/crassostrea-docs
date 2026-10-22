@@ -8,7 +8,7 @@
 | Apply changed settings | `sudo system/configure.sh` |
 | State of all services | `systemctl list-units 'spamfilter*' postfix rspamd nginx valkey mariadb unbound 'clamd@*'` |
 | Logs of a component | `journalctl -u postfix` (or `rspamd`, `spamfilter-web`, `spamfilter-netfilter`, ...) |
-| Mail log | `journalctl SYSLOG_FACILITY=2`, or **Postfix log** in the web interface |
+| Mail log | `journalctl SYSLOG_FACILITY=2`, or **Monitoring → Logs** in the web interface (also the other services' journal) |
 | Re-write all filter maps | `sudo systemctl start spamfilter-job@sync` |
 | Send due digests now | `sudo systemctl start spamfilter-job@send-digests` |
 | Synchronise the directories now | `sudo systemctl start spamfilter-job@sync-directories` |
@@ -39,9 +39,10 @@
 | `spamfilter-logship` | Ships the mail log from journald to Valkey (web interface, netfilter) |
 | `spamfilter-watchdog` | Health checks, restarts, notifications |
 | `spamfilter-postfix-control.socket` | Root helper for mail queue actions, started per request |
+| `spamfilter-logs.socket` | Root helper that reads the journal of the gateway's services for **Monitoring → Logs**, started per request |
 | `spamfilter-postfix-reload.path` | Applies the relay networks and the message size limit to Postfix when they change (`postfix-apply`) |
 | `spamfilter-hostname.path`, `spamfilter-tls.path`, `spamfilter-network.path`, `spamfilter-backup-request.path` | Root services the web interface asks to change the hostname, certificates and TLS versions, IP addressing, and to make or delete backups; started while a request file in `/var/lib/spamfilter/web/` exists |
-| `spamfilter-cluster-report`, `spamfilter-cluster` | Cluster nodes only: report the node's state every 10 seconds and carry out maintenance and Valkey master changes (root), see [Cluster page](high-availability.md#cluster-page) |
+| `spamfilter-cluster-report`, `spamfilter-cluster` | Cluster nodes only: report the node's state every 10 seconds and carry out maintenance, Valkey master and membership changes (root), see [Cluster page](high-availability.md#cluster-page) |
 | `valkey-sentinel`, `haproxy`, `keepalived`, `garb` | Cluster only, see [High availability](high-availability.md) |
 
 Scheduled jobs (`systemctl list-timers 'spamfilter*'`):

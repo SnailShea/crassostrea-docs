@@ -1,8 +1,11 @@
 # Monitoring
 
 The gateway checks itself (the [watchdog](operations.md#watchdog) restarts
-unhealthy services and notifies you). **Monitoring** hands its state
-to the tools you already use: Prometheus, a SIEM and alert mail.
+unhealthy services and notifies you). **Monitoring** shows the alert checks and
+the state of every service (systemd unit, since when, in a cluster those of
+the node you are logged in to), and has the [logs](#logs). **Settings → Alerts
+& export** hands the state to the tools you already use: Prometheus, a SIEM
+and alert mail.
 
 ## Prometheus
 
@@ -44,7 +47,7 @@ report it (see the [Cluster page](high-availability.md#cluster-page)):
 | Metric | Labels | Meaning |
 | --- | --- | --- |
 | `sf_cluster_votes` | `kind` (total, quorum, present) | Votes of all members, needed for a majority, in the database cluster |
-| `sf_cluster_problems` | `level` (critical, warning) | Problems on the Cluster page |
+| `sf_cluster_problems` | `level` (critical, warning) | Problems on Monitoring → Cluster |
 | `sf_cluster_member_reporting`, `sf_cluster_member_report_age_seconds` | `member` | Whether a node reported in the last minute, and when |
 | `sf_cluster_member_maintenance` | `member` | 1 if the node is in maintenance |
 | `sf_cluster_member_database_synced` | `member` | 1 if its database is synced in the primary component |
@@ -102,3 +105,37 @@ are now. **Send a test alert** checks the delivery. Alerts come from
 
 The watchdog's notifications (`WATCHDOG_NOTIFY_*`) are independent: it covers
 the services themselves and works without the web interface and the database.
+
+## Logs
+
+**Monitoring → Logs** shows the most recent lines of one service at a time,
+newest first; the row of names above the list switches between them:
+
+| Service | Covers |
+| --- | --- |
+| Postfix | The mail log: connections, deliveries, rejections. In a cluster from all nodes, with the node's name (from Valkey, written by `spamfilter-logship`) |
+| Rspamd | Scans, maps, Lua errors |
+| ClamAV | `clamd@spamfilter`, `clamav-freshclam`, the Sanesecurity updates, Olefy |
+| Web interface | `spamfilter-web`, `spamfilter-web-internal` |
+| nginx | The web server's journal (its access log stays in `/var/log/nginx`) |
+| Database | MariaDB, in a cluster also the Galera arbitrator |
+| Valkey | Valkey, in a cluster also Sentinel and haproxy |
+| DNS resolver | unbound |
+| Postfix service | `postfix.service` itself, the MTA-STS/DANE policy service, reloads |
+| Bans | `spamfilter-netfilter`, `spamfilter-logship` |
+| Watchdog | `spamfilter-watchdog` |
+| Certificates | `spamfilter-acme`, the certificate changes of the web interface |
+| Jobs | Cleanup, digests, map sync, directories, alerts, backups, DMARC reports, rule updates |
+| SIEM & journaling | `spamfilter-siem`, `spamfilter-journal` |
+| Root services | Hostname and network changes, mail queue actions, the log reader |
+| Cluster | `spamfilter-cluster`, `spamfilter-cluster-report`, keepalived (only in a cluster) |
+
+Filter by text (the message or the unit) and, except for the Postfix log, by
+level (warnings and errors only, for example). The page updates itself every
+10 seconds and shows the last 500 lines.
+
+The journal is readable only by root: `spamfilter-logs.socket` starts a small
+root helper (`system/libexec/log-reader`) per request, which reads only the
+units it lists itself; the web interface only names the service. Apart from
+the Postfix log, a cluster node shows its own journal: open the page on each
+node, by its name.

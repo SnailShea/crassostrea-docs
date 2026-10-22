@@ -24,26 +24,39 @@ instead (`system/cluster.sh leave`, `members`, `bundle`, then `setup.sh
 
 ## IP addressing
 
-**Network → Hostname & IP** (single gateway) shows and changes the network
-interface's configuration through NetworkManager:
+**Network → Hostname & IP** (single gateway) shows and changes the
+configuration of the server's network interfaces through NetworkManager. With
+several interfaces, a table lists them (addresses, which has the default
+route); choose one to change it (`?device=` in the address). Bridges such as
+`docker0`, loopback and interfaces NetworkManager does not manage are left out.
 
-- per family (IPv4, IPv6): **manual** addresses with prefix length, gateway and
-  DNS servers, or **automatic** (DHCP; for IPv6 SLAAC/DHCPv6);
-- whether the gateway uses **IPv4** and **IPv6** at all (`IPV4_ENABLED`,
-  `IPV6_ENABLED` in `spamfilter.conf`). Off means the interface has no address
-  of that family and Postfix, unbound and nginx do not use it. Loopback keeps
-  both: the services talk to each other over `127.0.0.1`. **Only one family
-  can be off.**
+For each interface and family (IPv4, IPv6):
+
+- **on or off**: off means the interface has no address of that family;
+- **manual** addresses with prefix length, an optional gateway and DNS servers,
+  or **automatic** (DHCP; for IPv6 SLAAC/DHCPv6). An interface of an internal
+  network needs no gateway.
+
+Either family, or both, can be off on any interface **as long as another
+interface keeps an address**; the last interface with an address keeps at
+least one family. The gateway's services use a family if any interface has it
+(`IPV4_ENABLED`, `IPV6_ENABLED` in `spamfilter.conf`, set accordingly): Postfix,
+unbound and nginx. Loopback keeps both: the services talk to each other over
+`127.0.0.1`.
 
 The DNS servers are not used while the gateway resolves names itself
 (`MANAGE_RESOLVER=y`, the default).
 
 After **Save**, the root service `spamfilter-network.path`
-(`system/libexec/network-apply`) applies the change, reconfigures the services
-for the families, and **tests** that every enabled family reaches the internet
-(1.1.1.1 and 9.9.9.9, or their IPv6 counterparts, by ICMP or TCP) and that
-names resolve. If a test fails, the previous settings come back, and the page
-shows the outcome with the log. This takes up to a minute.
+(`system/libexec/network-apply`) checks the request again against the other
+interfaces, applies it, reconfigures the services for the families, and
+**tests** that names resolve and that every family with a way out reaches the
+internet (1.1.1.1 and 9.9.9.9, or their IPv6 counterparts, by ICMP or TCP): a
+family that has a default route, or a gateway or automatic configuration on
+some interface. A family only on internal interfaces is not tested, but at
+least one family must reach the internet. If a test fails, the previous
+settings of the interface come back, and the page shows the outcome with the
+log. This takes up to a minute.
 
 !!! warning
     The page warns when you are connected over the family you are about to
@@ -53,7 +66,8 @@ shows the outcome with the log. This takes up to a minute.
     network is.
 
 In a cluster the members' addresses identify them and are not changed here.
-Also `GET/PUT /api/v1/ip-config`.
+Also `GET/PUT /api/v1/ip-config` (`device` chooses the interface; without it,
+the one with the default route).
 
 ## DNS and ports
 

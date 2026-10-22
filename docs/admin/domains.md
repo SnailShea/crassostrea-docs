@@ -81,7 +81,7 @@ Outbound mail released from the quarantine is signed with the same key.
 
 Your own mail servers can send outbound mail through the gateway:
 
-1. **Outbound → Relay networks**: add the address or network of each server.
+1. **Settings → Relay networks**: add the address or network of each server.
    Only add networks you control: the gateway relays their mail anywhere.
 2. Configure the gateway as the server's smart host (port 25).
 3. Add the gateway to the SPF record of the sending domains and set up DKIM.

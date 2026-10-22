@@ -63,6 +63,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 | Relay networks | `GET/POST /relay-networks`, `DELETE /relay-networks/{id}` |
 | Directories | `GET/POST /directories`, `GET/PATCH/DELETE /directories/{id}`, `POST /directories/{id}/test`, `POST /directories/{id}/sync` |
 | Outbound limits | `GET/POST /outbound-limits`, `GET/PATCH/DELETE /outbound-limits/{id}`, `GET /outbound-senders`, `POST /outbound-senders/reset` |
+| Rate limits | `GET /rate-limits/hits`, `POST /rate-limits/reset` (the limits are settings) |
 | Data loss prevention | `GET/POST /dlp-rules`, `GET/PATCH/DELETE /dlp-rules/{id}`, `POST /dlp-rules/test` |
 | Content rules | `GET/POST /content-rules`, `GET/PATCH/DELETE /content-rules/{id}`, `POST /content-rules/test` |
 | Impersonation | `GET/POST /protected-people`, `GET/PATCH/DELETE /protected-people/{id}`, `POST /impersonation/test` |
@@ -70,7 +71,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 | Attachments | `GET /hash-detections`, `POST /hash-lookup` |
 | Settings | `GET/PATCH /settings` (the global settings of all pages; API keys of the hash lookups are write-only, shown as `..._set`) |
 | Hostname | `GET/PUT /hostname` |
-| IP addressing | `GET/PUT /ip-config` |
+| IP addressing | `GET/PUT /ip-config` (`device`: the interface) |
 | Certificates and TLS | `GET /tls`, `POST /tls/letsencrypt/test`, `POST /tls/letsencrypt/apply`, `POST /tls/certificate`, `POST /tls/certificate/apply`, `PUT /tls/versions` |
 | Quarantine | `GET /quarantine`, `GET/DELETE /quarantine/{id}`, `GET /quarantine/{id}/raw`, `POST /quarantine/{id}/release`, `POST /quarantine/{id}/learn-spam` |
 | Mail log | `GET /mail-log`, `GET /mail-log/{id}`, `GET /mail-log/{id}/raw`, `POST /mail-log/{id}/requeue` |
@@ -83,7 +84,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 | Audit log | `GET /audit-log` |
 | Backups | `GET/POST /backups`, `DELETE /backups/{name}`, `GET /backups/{name}/download` |
 | Monitoring | `GET /monitoring/checks` (metrics for Prometheus: `/metrics`, see [Monitoring](monitoring.md)) |
-| Cluster | `GET /cluster`, `PUT /cluster/nodes/{node}/maintenance`, `POST /cluster/nodes/{node}/valkey-master` |
+| Cluster | `GET /cluster`, `PUT /cluster/nodes/{node}/maintenance`, `POST /cluster/nodes/{node}/valkey-master`, `DELETE /cluster/nodes/{node}`, `DELETE /cluster/witness`, `POST /cluster/join-information`; on a single gateway `POST /cluster/create`, `POST /cluster/join` |
 | Administrators | `GET/POST /admins`, `GET/PATCH/DELETE /admins/{id}`, `POST /admins/{id}/reset-2fa` |
 | Mailbox users | `GET/POST /mailbox-users`, `GET/PATCH/DELETE /mailbox-users/{id}` |
 | Personal lists | `GET/POST /mailbox-users/{id}/list-entries`, `DELETE /mailbox-users/{id}/list-entries/{eid}` |
@@ -133,8 +134,10 @@ curl -H "$KEY" -H "Content-Type: message/rfc822" --data-binary @spam.eml $API/tr
   [Operations](operations.md#bans).
 - **Mail queue and training** act on the node that answers the request. In a
   cluster use a node's own hostname to reach its queue.
-- **Cluster**: `GET /cluster` answers `{"cluster": false}` on a single
-  gateway. Maintenance (`{"enabled": true}`) is refused with `409` if no other
+- **Cluster**: `GET /cluster` answers `{"cluster": false, ...}` on a single
+  gateway, with the progress of creating or joining a cluster (`setup`) and the
+  server's IPv4 addresses. Creating and joining answer `202`; the gateway's
+  services restart while they run. Maintenance (`{"enabled": true}`) is refused with `409` if no other
   node would accept mail (`"force": true` overrides); the node applies it
   within seconds (`maintenance_applied`).
 - **Settings** changes of thresholds and of the filter features are applied by

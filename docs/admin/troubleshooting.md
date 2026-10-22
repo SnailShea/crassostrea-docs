@@ -9,9 +9,10 @@ journalctl -u <unit> -n 100
 sudo system/cluster.sh status        # in a cluster
 ```
 
-The dashboard shows the same service list and the health of the database,
-Valkey and Rspamd. **DNS & ports** checks the records and connections the
-gateway needs, and **Monitoring** shows the alert checks.
+**Monitoring** shows the same service list and the alert checks, and
+**Monitoring → Logs** the journal of each service; the dashboard shows the
+health of the database, Valkey and Rspamd. **DNS & ports** checks the records
+and connections the gateway needs.
 
 ## Mail is not accepted
 
@@ -21,12 +22,14 @@ gateway needs, and **Monitoring** shows the alert checks.
 | `Recipient address rejected: User unknown` | Recipient validation: the address is not on the domain's list, or the downstream server rejects it ("verify" mode). With a directory: the address is not in it, or the last synchronisation was refused (Directories page) |
 | `Message size exceeds fixed limit` | Larger than the maximum message size (Settings → General, Messages) |
 | `451 ... Sending limit ... reached` (outbound) | The sender reached its [outbound limit](outbound.md#outbound-limits); reset it on the page |
+| `451 ... Rate limit of ... reached` (inbound) | A sending server or recipient reached an [inbound rate limit](protection.md#rate-limits): reset it on the Rate limits page, raise the limit, or exempt the server's network |
+| `too many connections from`, `... rate limit exceeded` | Postfix's SMTP connection limits (Rate limits page) |
 | `Temporary lookup failure`, 4xx | The database is not reachable; in a cluster this node lost the majority (see [High availability](high-availability.md#failures)) |
 | `blocked using <list>` (postscreen) | The sender is on a DNS blocklist |
 | Connection refused or timeout on port 25 | firewalld, the provider's port 25 block, or Postfix not running |
 | Connections from one sender's address time out, nothing in the log | netfilter banned the address; check **Banned IPs** |
 
-Send a test message and follow it in **Postfix log** (search for the
+Send a test message and follow it in the Postfix log (**Monitoring → Logs**, search for the
 address or queue ID) and the **Mail log**.
 
 ## Mail is accepted but not delivered
@@ -108,6 +111,14 @@ domain: `ps -eZ | grep spamfilter` should show `unconfined_service_t`, not
 If a denial blocks something legitimate, report it, and meanwhile build a local
 module with `sudo helper-scripts/selinux-local-policy.sh`.
 
+## Logs page
+
+| Symptom | Cause and fix |
+| --- | --- |
+| "The log reader (spamfilter-logs.socket) is not reachable" | `sudo systemctl enable --now spamfilter-logs.socket` (or run `system/configure.sh`) |
+| A service shows no lines | It has not logged since the journal was rotated, or the level filter hides its lines |
+| Only this node's lines | Expected for everything but the Postfix log: open the page on the other node |
+
 ## Documentation on the gateway
 
 | Symptom | Cause and fix |
@@ -121,13 +132,18 @@ module with `sudo helper-scripts/selinux-local-policy.sh`.
 
 | Symptom | Cause and fix |
 | --- | --- |
-| A new node does not join (`mariadb` times out) | The other members do not let it in: run `system/cluster.sh members` with the new list on them first; check the firewall zone `spamfilter-cluster` |
+| A new node does not join (`mariadb` times out) | The other members do not let it in yet: they apply the new membership within a minute (`journalctl -u spamfilter-cluster` on them); check the firewall zone `spamfilter-cluster` |
+| Join: "The join information is invalid, used or expired" | It works once, for an hour: create a new one on a member |
+| Join: "The member's certificate does not match" | The member's certificate changed since the join information was made (a renewal): create a new one |
+| Join: the member "does not answer" | The new gateway cannot reach the member's cluster address on its HTTPS port |
+| Join stops after "added this gateway to the cluster" | The member did not hand out the bundle: `journalctl -u spamfilter-cluster` on it. The members already list the new gateway: join it with a bundle (`system/cluster.sh bundle`, `setup.sh --join`) or remove it under Settings → Cluster |
+| A member shows "no longer in the cluster's membership" | It was removed while it was running: stop it (`system/cluster.sh leave`) and reinstall it to use it again |
 | `cluster.sh status`: database `non-Primary` | The node cannot reach a majority: network between the members, or too many members down |
 | MariaDB does not start after a power loss | Expected: [recover](high-availability.md#recovery-after-all-nodes-were-down) with `system/cluster.sh bootstrap` |
 | Valkey: "no Sentinel answers" | Sentinel is down on the members, or port 26379 is blocked |
 | The floating address does not move | keepalived needs VRRP between the nodes and a shared network segment; `journalctl -u keepalived` |
-| Cluster page: a node "has not reported" | Its database is not reachable or out of the majority, or `spamfilter-cluster-report` stopped: `journalctl -u spamfilter-cluster-report` on it |
-| Cluster page: "the cluster service does not report" | `spamfilter-cluster` stopped on that node: `journalctl -u spamfilter-cluster` |
+| Monitoring → Cluster: a node "has not reported" | Its database is not reachable or out of the majority, or `spamfilter-cluster-report` stopped: `journalctl -u spamfilter-cluster-report` on it |
+| Monitoring → Cluster: "the cluster service does not report" | `spamfilter-cluster` stopped on that node: `journalctl -u spamfilter-cluster` |
 | Maintenance "requested but not in effect" | The node's `spamfilter-cluster-report` or `spamfilter-cluster` does not run, or the node is down: it applies the request when it returns |
 | A node in maintenance still gets mail | Mail already queued is delivered; new connections get 421. Relay clients that only know this node queue the mail until maintenance ends |
 | Maintenance refused: "is needed to accept mail" | No other node is reporting, in sync and out of maintenance. Fix that first, or use `--force` |

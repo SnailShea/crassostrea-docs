@@ -21,7 +21,7 @@ A message's page shows:
   text and the **HTML** (see below);
 - attachments and all headers;
 - links to its quarantine entries (if it was rejected) and to its lines in the
-  Postfix log.
+  Postfix log (Monitoring → Logs).
 
 Actions:
 
@@ -66,7 +66,7 @@ silently: it is scored `CLAM_SCAN_INCOMPLETE` (+4).
 
 ## Statistics
 
-**Statistics** shows the scanned messages over time, by outcome:
+The **dashboard** shows the scanned messages over time, by outcome:
 
 | Outcome | Rspamd actions |
 | --- | --- |
@@ -77,8 +77,10 @@ silently: it is scored `CLAM_SCAN_INCOMPLETE` (+4).
 
 and the number of viruses, as totals and as a bar chart, for the last 24 hours
 (one bar per hour), 7 days (per 6 hours), 30 days (per day) or 12 months (per
-30 days). Filter by direction and domain; the busiest domains are listed below
-the chart. The same data is available as `GET /api/v1/statistics`.
+30 days). Filter by direction and domain; the busiest domains, the quarantine
+counts and the recent mail follow the filter. Domain administrators see their
+domains only. The same data is available as `GET /api/v1/statistics`; the
+former Statistics page (`/statistics/`) leads to the dashboard.
 
 The counts are hourly totals per domain, direction and outcome, added as the
 mail log stores each message, and kept for **two years** (setting
@@ -87,7 +89,4 @@ first start after the update that introduced them fills them from the
 existing mail log once.
 
 Mail refused before Rspamd saw it (postscreen, unknown recipients, unknown
-domains) is not counted; the Postfix log shows it.
-
-The dashboard's counters come from Rspamd and start at zero when Rspamd
-restarts; the statistics page does not.
+domains) is not counted; the Postfix log (Monitoring → Logs) shows it.

@@ -26,7 +26,7 @@ another recipient.
 
 | Level | Managed under | Applies to |
 | --- | --- | --- |
-| Global | Allow & block lists | Every message |
+| Global | Lists & training → Allow list, Block list | Every message |
 | Domain | the domain's page | Block: messages with at least one recipient in the domain. Allow: messages whose recipients are all in the domain |
 | Personal | the mailbox user's page or "My settings" | Messages whose recipients all belong to that user |
 

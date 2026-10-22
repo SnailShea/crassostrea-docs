@@ -54,7 +54,7 @@ domain.
 ## Mailbox users
 
 Mailbox users are accounts for recipients who manage their own quarantine.
-Create them under **Mailbox users** (or with the API); the address's domain
+Create them under **Users → Mailbox users** (or with the API); the address's domain
 must be configured. They log in with their e-mail address and see:
 
 - **My quarantine**: their inbound quarantined mail, including mail to their

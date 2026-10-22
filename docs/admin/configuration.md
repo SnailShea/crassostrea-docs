@@ -78,7 +78,7 @@ so you can change it here and apply it.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `IPV4_ENABLED` | `true` | Use IPv4 on the network interface (the host's addresses, Postfix, unbound, nginx). `true`/`false`; at least one of the two |
+| `IPV4_ENABLED` | `true` | The gateway uses IPv4 (Postfix, unbound, nginx). `true`/`false`; at least one of the two. The IP addressing page sets it: `true` while any interface has IPv4 |
 | `IPV6_ENABLED` | detected | The same for IPv6. Replaces `ENABLE_IPV6` of earlier versions, which `configure.sh` renames in the file |
 
 Loopback keeps both families whatever is set. See
@@ -144,7 +144,9 @@ change them with `system/docs.sh`.
 | `HA_VIP_INTERFACE` | the interface with the node's address | Network interface for `HA_VIP` |
 | `HA_VIP_ROUTER_ID` | `51` | VRRP router ID (1-255), unique in the network |
 
-Change membership with `system/cluster.sh members`, see
+Settings → Cluster in the web interface sets `HA_NODES` and `HA_WITNESS` on
+every member when nodes join or are removed (from the cluster's membership in
+the database); on the command line `system/cluster.sh members`. See
 [High availability](high-availability.md).
 
 ## Overrides that survive configure.sh

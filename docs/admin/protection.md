@@ -12,6 +12,7 @@ within a minute.
 | [Impersonation](#impersonation) | Impersonation | Lookalike and spoofing checks on; name check needs protected people |
 | [Link protection](#link-protection) | Link protection, domain settings | Off (per domain) |
 | [Content rules](#content-rules) | Content rules | None |
+| [Rate limits](#rate-limits) | Rate limits | 50 simultaneous connections per host; the others off |
 
 Rules that reject a message work like any other rejection: the sender is told
 during the SMTP dialogue, and inbound mail of domains with a quarantine is
@@ -156,3 +157,36 @@ outbound or all mail, and then:
 Rules are checked before Rspamd's other checks, so a reject rule always
 applies. Test them on a pasted message (headers, a blank line, the body) with
 an envelope sender and recipients. API: `/api/v1/content-rules`.
+
+## Rate limits
+
+**Protection → Rate limits** limits how much inbound mail a sending server may
+deliver and a recipient may receive, so a flood or a misbehaving server cannot
+swamp the gateway or a mailbox. Mail over a limit is **deferred** with a
+temporary error (4xx): the sending server retries later and nothing is lost.
+Two layers, 0 meaning no limit:
+
+| Layer | Limits | Counted |
+| --- | --- | --- |
+| SMTP connections (Postfix) | Simultaneous connections (Postfix's default 50), connections, messages and recipients per minute, per sending host | By Postfix's `anvil`, during the SMTP dialogue, on each node of a cluster separately |
+| Messages (Rspamd) | Messages from one IP address, messages to one recipient, bounces (empty sender) to one recipient, each per minute, hour or day | In Valkey as messages are scanned: for all nodes of a cluster together |
+
+Bounce limits catch *backscatter*: bounces of mail someone else sent with
+forged addresses of your domains.
+
+**Exempt networks** (one per line, e.g. partner servers that send a lot) have
+no rate limits in either layer. The relay networks never have any: their
+senders have [outbound limits](outbound.md#outbound-limits) instead.
+
+A deferred message counts nowhere. **Deferred in the last 7 days** lists the
+servers and recipients that reached a limit, with **Reset**, which clears their
+counts so their mail is accepted again at once. The rejection names the limit,
+e.g. `451 4.7.1 Rate limit of 100 messages from this server per hour reached,
+try again later`; Postfix's own limits log `too many connections` or
+`Message delivery request rate limit exceeded` in the Postfix log.
+
+The limits are settings (`smtp_*_limit`, `inbound_*_limit`, `inbound_*_period`,
+`rate_limit_exempt` in `PATCH /api/v1/settings`); `GET /api/v1/rate-limits/hits`
+and `POST /api/v1/rate-limits/reset` list and reset the deferred. Postfix applies
+its limits within seconds (`spamfilter-postfix-reload.path`, `postfix-apply`,
+kept by `configure.sh`), Rspamd within a minute.

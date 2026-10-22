@@ -11,6 +11,8 @@ on by default); mailbox users never see it.
 
 ## Outbound limits
 
+Inbound mail has its own [rate limits](protection.md#rate-limits).
+
 **Outbound limits** keeps a compromised account or device from sending a flood
 of spam through the gateway, which would get its address on block lists.
 

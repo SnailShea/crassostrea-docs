@@ -18,6 +18,7 @@ system/
   lib/docs.sh             the documentation at /docs/: fetch, build with MkDocs, nginx locations
   libexec/                helpers deployed to /usr/local/libexec/spamfilter
     postfix-control         root helper for mail queue actions (socket-activated)
+    log-reader              root helper that reads the journal of fixed units (socket-activated, Logs page)
     postfix-apply           relay networks and message size limit into Postfix
     set-hostname, tls-apply, network-apply   root services of the web UI (path units)
     backup                  create, prune and request handling of backups
@@ -26,7 +27,9 @@ system/
     acme                    acme.sh wrapper (also --staging-test)
     sa-rules, clamav-sigs   SpamAssassin rules, Sanesecurity signatures
     valkey-role             cluster: Valkey's role at start (and priority 0 in maintenance)
-    cluster-node            cluster: probes for the Cluster page, maintenance, Valkey master changes
+    cluster-node            cluster: probes for the Cluster page, maintenance, Valkey master changes,
+                            membership changes, join bundles for joining gateways
+    cluster-setup           a single gateway creating or joining a cluster (Cluster page)
   keepalived/             health check for the floating address
   systemd/                units, timers, socket and path units; dropins/ for distribution units
   tmpfiles.d/             runtime directories
@@ -36,7 +39,7 @@ data/
     rspamd/                 local.d, override.d, custom maps, lua/:
                               rspamd.local.lua        selectors and the checks of the web UI
                               dlp_detectors.lua, impersonation.lua    detectors (also in Python)
-                              *.redis.lua             Valkey scripts (outbound limits, hash lookups)
+                              *.redis.lua             Valkey scripts (outbound and inbound limits, hash lookups)
     clamav/, mysql/, unbound/
   hooks/                  administrator hooks run after rendering a component
   web/                    the web application
@@ -53,6 +56,7 @@ data/
       navigation.py           the sidebar's groups and the tabs of their pages (base.html)
       services/               business rules and backends, one module per feature (see Design decisions)
       views/                  admin pages, mailbox user portal, digest links, link protection (/l/),
+                              the join endpoint of a cluster (/cluster/join, cluster_join.py),
                               /metrics, render_live, protected_blueprint and the domain scope
       api/                    REST API: __init__ (auth, helpers), accounts, configuration, operations, spec
       templates/              Jinja templates; _*_live.html and */_live.html are live region partials

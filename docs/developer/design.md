@@ -63,6 +63,14 @@ validates every queue ID (`^[0-9A-Za-z]{6,32}$`) and passes IDs to `postsuper`
 on standard input, never as arguments. Postfix reloads after relay network
 changes are done by a path unit watching the file, not by the web UI.
 
+The Logs page reads the journal the same way: `spamfilter-logs.socket` starts
+`log-reader` as root per connection. The web UI names a source ("rspamd",
+"jobs", ...); the helper maps it to its own list of units and runs
+`journalctl` without a shell, with the number of lines and the priority
+validated. A compromised web UI can therefore read the logs of the gateway's
+services, not the rest of the journal. The Postfix log stays in Valkey
+(logship), so it shows every node of a cluster.
+
 ## The database is the source of truth
 
 Everything administrators configure lives in MariaDB. Derived state is
@@ -246,7 +254,7 @@ without reloading Rspamd:
   the prefilter `SF_MAIL_DIRECTION` sets both before anything else. Without it
   a message rejected early was not quarantined.
 - **Valkey scripts in files** (`outbound_limit.redis.lua`,
-  `hash_prepare.redis.lua`), loaded with `load_redis_script_from_file`: one
+  `inbound_limit.redis.lua`, `hash_prepare.redis.lua`), loaded with `load_redis_script_from_file`: one
   atomic call per message, and the web app's tests run the same file in
   fakeredis.
 - **Detectors in Lua and Python**: the DLP and impersonation detectors exist
@@ -372,11 +380,35 @@ with fresh state is retried after twice that, instead of after minutes.
 
 Every member has one vote; Galera and Sentinel both need a majority. With two
 nodes, a witness (arbitrator `garbd` plus a Sentinel, no data) provides the
-third vote. Membership is configuration (`HA_NODES`, `HA_WITNESS`), validated
-by `ha_parse` (fewer than three votes are refused), and applied by running
-`configure.sh` on every member: Galera learns members dynamically, the Sentinel
-configuration is regenerated (which also forgets departed Sentinels), and the
-firewall zone, haproxy and keepalived peer lists are rewritten.
+third vote. A cluster may have one or two votes while it grows (it then stops
+on a failure, like a Proxmox cluster of one or two nodes); `ha_parse` warns.
+
+Membership is configuration (`HA_NODES`, `HA_WITNESS`) on each member and a
+row of the shared database (`cluster_membership`), which is the source of
+truth: `cluster-report` compares them and asks the root service
+`cluster-node` to apply a difference (`configure.sh --no-restart`, then a
+haproxy and keepalived reload and Sentinel's quorum). Galera learns members
+dynamically, so no database restart is needed. The witness has no database:
+it is changed on the command line.
+
+### Building a cluster in the web interface
+
+Modelled on Proxmox: create on one gateway, join the others with a join
+information. The information carries the member's cluster address, the
+SHA-256 of its HTTPS certificate and a one-time secret (hashed in
+`cluster_join_tokens`, one hour). The joining gateway's root service
+`cluster-setup` connects to the member's cluster address with the member's
+name as SNI and accepts the TLS connection only with that fingerprint: no CA
+is involved, so a self-signed certificate or a name that does not resolve
+there yet still works, and nobody in between can read the join bundle.
+`POST /cluster/join` (no login; the secret authenticates) adds the gateway to
+the membership on the first call and answers `202` until the member's
+`cluster-node` has applied it (the firewall lets the new node in) and written
+the join bundle; then `200` with the bundle, once. The bundle never leaves the
+member otherwise, and the web interface, which cannot read the CA key, only
+hands out what root wrote into a directory of its group. The joining side then
+runs the same `setup.sh --join` as on the command line, so there is one way to
+join, whichever starts it; creating runs `setup.sh --ha`.
 
 Members restart MariaDB, Valkey and Sentinel only when their rendered
 configuration changed (hashes in `/var/lib/spamfilter/config-hashes`), because

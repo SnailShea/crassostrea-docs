@@ -13,36 +13,38 @@ their pages, and no tabs where only one page is left.
 
 | Menu | Tabs | Purpose |
 | --- | --- | --- |
-| Dashboard | | Scan counters of Rspamd, quarantine and domain counts, health of database, Valkey and Rspamd, recent mail, state of all services; in a cluster also the database and Valkey replication state |
-| Statistics | Statistics | Scanned messages over time by outcome, see [Mail log and statistics](mail-log.md#statistics) |
-| | DMARC & TLS reports | Reports about your domains, see [DMARC and TLS reports](reports.md) |
+| Dashboard | | The [statistics](mail-log.md#statistics) of the scanned mail by period, direction and domain, the busiest domains, quarantine and domain counts, recent mail; for full administrators the health of the database, Valkey and Rspamd and, in a cluster, its state |
 | **Mail** | | |
 | Quarantine | | Rejected mail, see [Quarantine and digests](quarantine.md) |
 | Mail log | Mail log | Every scanned message with its score breakdown, text, HTML and headers; download, queue again, see [Mail log and statistics](mail-log.md) |
 | | Mail queue | Messages waiting for delivery: flush, deliver now, hold, release hold, delete. In a cluster: the queue of the node you are logged in to |
-| | Postfix log | The most recent mail log lines, searchable; in a cluster from all nodes, with the node's name |
 | | Journaling | Copies of all mail to an archive, see [Journaling](journaling.md) |
+| DMARC & TLS reports | | Reports about your domains, see [DMARC and TLS reports](reports.md) |
 | **Filter** | | |
 | Domains | Domains | Protected domains, their recipients, lists and DKIM keys, see [Domains and delivery](domains.md) |
 | | Directories | Recipients from LDAP, Active Directory or Microsoft 365, see [Recipient directories](directories.md) |
-| | Mailbox users | Accounts of recipients |
-| Protection | Impersonation, Link protection, Attachments, Content rules | See [Threat protection](protection.md) |
-| Lists & training | Allow & block lists | Global entries, see [Filtering](filtering.md#allow-and-block-lists) |
+| Protection | Impersonation, Link protection, Attachments, Content rules, Rate limits | See [Threat protection](protection.md) |
+| Lists & training | Allow list | Global allow entries, see [Filtering](filtering.md#allow-and-block-lists) |
+| | Block list | Global block entries |
 | | Training | Teach Bayes and the fuzzy storage; reports from users, see [Filtering](filtering.md#training) |
-| Outbound | Relay networks | The servers that may send outbound mail through the gateway, see [Domains and delivery](domains.md#outbound-mail) |
-| | Outbound limits, Data loss prevention | See [Outbound mail](outbound.md) |
+| Outbound | Outbound limits, Data loss prevention | See [Outbound mail](outbound.md) |
 | **System** | | |
 | Settings | General | Global thresholds, message limits and mail log retention, quarantine and digests, administrators (two-factor requirement, audit log retention) |
 | | Branding | Name, colour, logo, footer, see [Branding](#branding) |
+| | Relay networks | The servers that may send outbound mail through the gateway, see [Domains and delivery](domains.md#outbound-mail) |
+| | Alerts & export | Prometheus token, SIEM export, alert mail, see [Monitoring](monitoring.md) |
+| | Cluster | Create a cluster or join one (single gateway); join information, maintenance, the Valkey master, removing members (cluster), see [High availability](high-availability.md#setting-up-a-cluster) |
 | | Backups | Backups, see [Backups](backups.md) |
-| Network | Hostname & IP | The gateway's hostname, addresses and IP families, see [Hostname, IP addressing and DNS](network.md) |
+| Network | Hostname & IP | The gateway's hostname, and the addresses and IP families of each network interface, see [Hostname, IP addressing and DNS](network.md) |
 | | Certificates & TLS | Let's Encrypt or your own certificate, TLS versions, see [Certificates and TLS](certificates.md) |
 | | DNS & ports | Checks of the records and connections the gateway needs, see [Hostname, IP addressing and DNS](network.md#dns-and-ports) |
 | | Banned IPs | Hosts blocked by netfilter, with unban |
-| Monitoring | Monitoring | Prometheus token, SIEM export, alert mail, see [Monitoring](monitoring.md) |
-| | Cluster | Every member's state, the cluster's problems, maintenance and the Valkey master, see [High availability](high-availability.md#cluster-page); on a single gateway how to set up a cluster |
-| Access | Administrators | Accounts and their roles, see [Administrators and audit log](administrators.md) |
-| | Audit log | Who changed what, see [Administrators and audit log](administrators.md#audit-log) |
+| Monitoring | Monitoring | The alert checks and the state of every service, see [Monitoring](monitoring.md) |
+| | Logs | The Postfix log (all nodes) and the journal of the other services, one service at a time, see [Monitoring](monitoring.md#logs) |
+| | Cluster | Every member's state and the cluster's problems, see [High availability](high-availability.md#cluster-page) |
+| Users | Administrators | Accounts and their roles, see [Administrators and audit log](administrators.md) |
+| | Mailbox users | Accounts of recipients, see [Quarantine and digests](quarantine.md#mailbox-users) |
+| Access | Audit log | Who changed what, see [Administrators and audit log](administrators.md#audit-log) |
 | | API keys | Keys for the [REST API](api.md) |
 | | API documentation | Swagger UI of the API |
 | Documentation | | This documentation at `https://<hostname>/docs/`, if it is [deployed on the gateway](installation.md#documentation-on-the-gateway) |
@@ -56,8 +58,9 @@ gateway; in a cluster they show the state and explain what to do instead.
 
 ## Live pages
 
-The dashboard, statistics, mail log, quarantine, mail queue, Postfix log,
-banned IPs, audit log, journaling, outbound limits, link protection, cluster, and the
+The dashboard, mail log, quarantine, mail queue, logs, the checks and services
+of Monitoring, banned IPs, audit log, journaling, outbound limits, link
+protection, cluster, and the
 status parts of IP addressing, Certificates & TLS and Backups update
 themselves every 5 to 60 seconds. A line above the content shows when it was
 last updated and has a **Pause** button. Updates also pause while you have

@@ -59,7 +59,8 @@ can connect to the host's loopback interface can reach the internal ports
 
 ## Cluster
 
-A cluster needs at least three votes: three full nodes, or two full nodes and
-a small witness host. The members need fixed IPv4 addresses on which they reach
+A cluster survives the failure of a member from three votes on: three full
+nodes, or two full nodes and a small witness host (it can start with one node
+and grow). The members need fixed IPv4 addresses on which they reach
 each other, ideally on a private network, and low latency between them (the
 same region). See [High availability](high-availability.md).
