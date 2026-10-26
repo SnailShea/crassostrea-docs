@@ -45,6 +45,10 @@ senders).
 | Verify with the downstream server | Postfix asks the downstream server whether the address exists (SMTP call-ahead) before accepting a message, and caches the answer |
 | Only recipients from a directory | Like the list, but the list is synchronised every 15 minutes from LDAP, Active Directory or Microsoft 365, see [Recipient directories](directories.md). Addresses added by hand stay |
 
+Refused recipients appear in the [mail log](mail-log.md#refused-recipients)
+with Postfix's reason; with "Accept all recipients" there is nothing to refuse,
+and every message is scanned and logged as usual.
+
 The recipient list is only used in "list" and "directory" mode, but can be
 prepared before switching to it. It shows for each address whether it was
 added by hand or by the directory.

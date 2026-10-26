@@ -18,7 +18,7 @@ programs of its own, all as systemd units on one EL10 host:
 | Log reader (`crassostrea-logs@`) | Python | root, per connection | The journal of the services for the Logs page; only the units it lists |
 | Root services of the web UI | Bash, Python | root, per request | `set-hostname`, `set-timezone`, `tls-apply`, `network-apply`, `backup request`, `postfix-apply`: started by path units when the web UI writes a request (see [Design decisions](design.md#root-services-for-the-web-ui)) |
 | backup, dmarc-report | Bash | root | Nightly backup and pruning, daily DMARC reports |
-| logship | Python | `crassostrea` + `systemd-journal` | Mail log from journald to Valkey |
+| logship | Python | `crassostrea` + `systemd-journal` | Mail log from journald to Valkey; refused recipients to the internal API |
 | netfilter | Python | root | Bans in nftables |
 | Watchdog | Bash | root | Health checks, restarts, notifications |
 | acme, sa-rules, clamav-sigs | Bash | root | Certificate and rule/signature updates |

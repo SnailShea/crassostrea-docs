@@ -9,6 +9,27 @@ and action, or search the subject, sender, recipients, `From` header,
 Message-ID, queue ID or client address. The list updates itself like the other
 live pages.
 
+### Refused recipients
+
+For domains that validate recipients (a recipient list, a directory, or
+verification with the destination server), Postfix refuses an address that
+does not exist during the SMTP dialogue, before the message is sent; Rspamd
+never sees it. The mail log shows these too, one row per refused recipient:
+action **reject**, the sender, the recipient, the client address and Postfix's
+reason ("User unknown in relay recipient table", or "undeliverable address:
+..." from the destination server) instead of a subject. Choose **refused
+recipients** in the action filter to see only them (`action=refused` in
+`GET /api/v1/mail-log`, whose entries carry the reason as `refused`).
+
+They have no message: no score, content, download or queueing again, and
+their page links to the Postfix log lines of the recipient. They are kept as
+long as the mail log, go to the SIEM with the reason, are not journaled, and
+are not counted in the statistics or listed among the dashboard's recent mail,
+so a dictionary attack does not bury real mail there. Only permanent refusals
+(5xx) are logged; a temporary one (the destination server could not be asked)
+is retried by the sender. `crassostrea-logship` finds them in the Postfix log on
+each node and reports them to the internal API.
+
 A message's page shows:
 
 - its details: queue ID, Message-ID, client address, size, scan time;

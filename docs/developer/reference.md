@@ -115,14 +115,15 @@ The account commands are recorded in the audit log as `cli`.
 
 ## Internal API
 
-`crassostrea-web-internal` on `127.0.0.1:8001`, for Rspamd only (loopback or
-`INTERNAL_CLIENTS`):
+`crassostrea-web-internal` on `127.0.0.1:8001`, for Rspamd and `logship` only
+(loopback or `INTERNAL_CLIENTS`):
 
 | Endpoint | Caller | Content |
 | --- | --- | --- |
 | `GET /internal/rspamd/settings` | Rspamd settings map | Per-domain and per-user rules |
 | `POST /internal/mail-log` | metadata exporter | Every message for a protected domain or from a relay network |
 | `POST /internal/quarantine` | metadata exporter | Rejected messages |
+| `POST /internal/refused-recipient` | `logship` | A recipient Postfix refused because it does not exist (JSON: `time`, `ip`, `sender`, `rcpt`, `reason`), for the mail log |
 | `POST /internal/reports` | `SF_INTAKE_EXPORT` | Mail to `reports@<hostname>` |
 | `POST /internal/learn/spam`, `/internal/learn/ham` | `SF_INTAKE_EXPORT` | Mail to `spam@`/`ham@<hostname>`, with `X-Envelope-From`, `X-Client-IP`, `X-Relay-Network` |
 
