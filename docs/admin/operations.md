@@ -36,7 +36,7 @@
 | `crassostrea-journal` | Sends journal copies to the archive ([Journaling](journaling.md)); idles while none is set |
 | `crassostrea-postfix-tlspol` | MTA-STS and DANE policies for outbound TLS |
 | `crassostrea-netfilter` | Bans hosts in its own nftables table (`inet crassostrea`) |
-| `crassostrea-logship` | Ships the mail log from journald to Valkey (web interface, netfilter), and adds the recipients Postfix refused to the mail log |
+| `crassostrea-logship` | Ships the mail log from journald to Valkey (web interface, netfilter), and adds the recipients Postfix refused and the delivery results to the mail log |
 | `crassostrea-watchdog` | Health checks, restarts, notifications |
 | `crassostrea-postfix-control.socket` | Root helper for mail queue actions, started per request |
 | `crassostrea-logs.socket` | Root helper that reads the journal of the gateway's services for **Monitoring → Logs**, started per request |

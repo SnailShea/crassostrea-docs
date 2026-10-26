@@ -74,7 +74,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 | IP addressing | `GET/PUT /ip-config` (`device`: the interface) |
 | Certificates and TLS | `GET /tls`, `POST /tls/letsencrypt/test`, `POST /tls/letsencrypt/apply`, `POST /tls/certificate`, `POST /tls/certificate/apply`, `PUT /tls/versions` |
 | Quarantine | `GET /quarantine`, `GET/DELETE /quarantine/{id}`, `GET /quarantine/{id}/raw`, `POST /quarantine/{id}/release` (`allow_sender`), `POST /quarantine/{id}/block-sender`, `POST /quarantine/{id}/learn-spam` |
-| Mail log | `GET /mail-log`, `GET /mail-log/{id}`, `GET /mail-log/{id}/raw`, `POST /mail-log/{id}/requeue` |
+| Mail log | `GET /mail-log` (filters incl. `action=refused`, `delivery=delivered\|deferred\|bounced`), `GET /mail-log/{id}` (with `deliveries`), `GET /mail-log/{id}/raw`, `POST /mail-log/{id}/requeue` |
 | Statistics | `GET /statistics` |
 | Reports | `GET /reports/summary`, `GET /reports/dmarc`, `GET /reports/tls` |
 | Journaling | `GET /journal/status` |

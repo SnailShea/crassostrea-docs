@@ -29,7 +29,7 @@ system/
     set-hostname, set-timezone, tls-apply, network-apply   root services of the web UI (path units)
     backup                  create, prune and request handling of backups
     dmarc-report            daily DMARC aggregate reports (rspamadm dmarc_report)
-    logship                 journald -> Valkey (mail log, netfilter channel), refused recipients -> internal API
+    logship                 journald -> Valkey (mail log, netfilter channel), refused recipients and deliveries -> internal API
     acme                    acme.sh wrapper (also --staging-test)
     sa-rules, clamav-sigs   SpamAssassin rules, Sanesecurity signatures
     valkey-role             cluster: Valkey's role at start (and priority 0 in maintenance)

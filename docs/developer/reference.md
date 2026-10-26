@@ -124,6 +124,7 @@ The account commands are recorded in the audit log as `cli`.
 | `POST /internal/mail-log` | metadata exporter | Every message for a protected domain or from a relay network |
 | `POST /internal/quarantine` | metadata exporter | Rejected messages |
 | `POST /internal/refused-recipient` | `logship` | A recipient Postfix refused because it does not exist (JSON: `time`, `ip`, `sender`, `rcpt`, `reason`), for the mail log |
+| `POST /internal/delivery` | `logship` | A delivery attempt (`kind` delivery: `qid`, `rcpt`, `status`, `dsn`, `relay`, `detail`), a notice to the sender (`bounce_notice`, `delay_notice`, `dsn_notice` with `notice_qid`) or an expired message (`expired`), stored in `mail_delivery` |
 | `POST /internal/reports` | `SF_INTAKE_EXPORT` | Mail to `reports@<hostname>` |
 | `POST /internal/learn/spam`, `/internal/learn/ham` | `SF_INTAKE_EXPORT` | Mail to `spam@`/`ham@<hostname>`, with `X-Envelope-From`, `X-Client-IP`, `X-Relay-Network` |
 

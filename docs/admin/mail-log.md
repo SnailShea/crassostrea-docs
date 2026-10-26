@@ -9,6 +9,30 @@ and action, or search the subject, sender, recipients, `From` header,
 Message-ID, queue ID or client address. The list updates itself like the other
 live pages.
 
+### Delivery
+
+The mail log also shows what Postfix did with a message after it was scanned.
+The list marks each message **delivered** (every recipient's server accepted
+it), **deferred** (Postfix is still retrying a recipient) or **bounced** (a
+recipient's server refused it, or Postfix gave up after the queue lifetime,
+5 days), and **bounce sent** when the gateway sent the sender a non-delivery
+notice. The **delivery** filter finds them (`delivery=` in
+`GET /api/v1/mail-log`).
+
+A message's page has a **Delivery** card: for each recipient the latest
+attempt with the receiving server, the DSN code and its answer (e.g.
+`550 5.1.1 User unknown`), the number of attempts and when the last one was;
+whether Postfix gave up; and the notices the gateway sent the sender (bounce,
+delay warning, delivery status notification) with their own queue ID and
+whether they arrived. A rejected message has no delivery. The API returns the
+same as `deliveries` of `GET /api/v1/mail-log/{id}`.
+
+The notices themselves are not mail log entries: Postfix creates them without
+a scan. `crassostrea-logship` finds the delivery lines in the Postfix log of
+each node and reports them to the internal API; they are matched to messages
+by queue ID (Postfix uses long queue IDs, which are never reused) and kept as
+long as the mail log. Delivery results start with the update that added them.
+
 ### Refused recipients
 
 For domains that validate recipients (a recipient list, a directory, or
