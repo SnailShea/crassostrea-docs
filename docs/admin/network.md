@@ -4,9 +4,9 @@
 
 **Network → Hostname & IP** (Gateway hostname) renames a single gateway, for example when
 the MX and PTR records were created under another name. A root service
-(`spamfilter-hostname.path`, `system/libexec/set-hostname`):
+(`crassostrea-hostname.path`, `system/libexec/set-hostname`):
 
-1. sets `CRASSOSTREA_HOSTNAME` in `spamfilter.conf` (later `configure.sh` runs
+1. sets `CRASSOSTREA_HOSTNAME` in `crassostrea.conf` (later `configure.sh` runs
    keep it) and Postfix's `myhostname`;
 2. updates the sender of DMARC reports;
 3. restarts the services that read the name, the web interface included
@@ -40,14 +40,14 @@ For each interface and family (IPv4, IPv6):
 Either family, or both, can be off on any interface **as long as another
 interface keeps an address**; the last interface with an address keeps at
 least one family. The gateway's services use a family if any interface has it
-(`IPV4_ENABLED`, `IPV6_ENABLED` in `spamfilter.conf`, set accordingly): Postfix,
+(`IPV4_ENABLED`, `IPV6_ENABLED` in `crassostrea.conf`, set accordingly): Postfix,
 unbound and nginx. Loopback keeps both: the services talk to each other over
 `127.0.0.1`.
 
 The DNS servers are not used while the gateway resolves names itself
 (`MANAGE_RESOLVER=y`, the default).
 
-After **Save**, the root service `spamfilter-network.path`
+After **Save**, the root service `crassostrea-network.path`
 (`system/libexec/network-apply`) checks the request again against the other
 interfaces, applies it, reconfigures the services for the families, and
 **tests** that names resolve and that every family with a way out reaches the

@@ -49,6 +49,26 @@ The recipient list is only used in "list" and "directory" mode, but can be
 prepared before switching to it. It shows for each address whether it was
 added by hand or by the directory.
 
+## Testing the destination
+
+**Test destination** on the domain page talks SMTP to the downstream server
+(each of its MX hosts with "use MX") the way the gateway delivers, without
+sending anything: connect, EHLO, STARTTLS, `MAIL FROM:<>`, then `RCPT TO` for
+an address you enter (optional) and for a made-up address of the domain. It
+shows per host:
+
+- whether it answers and accepts the sender;
+- **TLS**: offered or not, and whether its certificate is trusted (Postfix
+  encrypts without checking it, like most mail servers);
+- your address: accepted, deferred or refused;
+- the made-up address: a server that **accepts** it accepts any address, so
+  "Verify with the downstream server" cannot reject wrong recipients there;
+  use a recipient list or a directory instead;
+- the SMTP dialogue.
+
+Save changes to the delivery settings before testing them. API:
+`POST /api/v1/domains/{id}/test-destination` with an optional `address`.
+
 ## Domain allow and block lists
 
 On the domain page you manage entries that apply to this domain only:
@@ -92,8 +112,8 @@ on by default); mailbox users never see outbound mail. Limits per sender and
 data loss prevention rules are described in [Outbound mail](outbound.md).
 
 The relay networks are also written for Postfix, as
-`/var/lib/spamfilter/postfix/relay_networks.cidr`
-(`spamfilter-postfix-reload.path` reloads Postfix when it changes; earlier
+`/var/lib/crassostrea/postfix/relay_networks.cidr`
+(`crassostrea-postfix-reload.path` reloads Postfix when it changes; earlier
 versions used `/etc/postfix/dynamic/`).
 
 ## Deleting a domain

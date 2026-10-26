@@ -190,7 +190,7 @@ try again later`; Postfix's own limits log `too many connections` or
 The limits are settings (`smtp_*_limit`, `inbound_*_limit`, `inbound_*_period`,
 `rate_limit_exempt` in `PATCH /api/v1/settings`); `GET /api/v1/rate-limits/hits`
 and `POST /api/v1/rate-limits/reset` list and reset the deferred. Postfix applies
-its limits within seconds (`spamfilter-postfix-reload.path`, `postfix-apply`,
+its limits within seconds (`crassostrea-postfix-reload.path`, `postfix-apply`,
 kept by `configure.sh`), Rspamd within a minute.
 
 ## Virus scanning
@@ -230,6 +230,6 @@ logged in the Postfix log as `cannot find your reverse hostname`.
 Postfix's `reject_unknown_reverse_client_hostname` does the check
 (`sf_ptr_check` at the end of `smtpd_client_restrictions`, with
 `unknown_client_reject_code`), applied within seconds by
-`spamfilter-postfix-reload.path` and kept by `configure.sh`. The setting is
+`crassostrea-postfix-reload.path` and kept by `configure.sh`. The setting is
 `ptr_check` (`off`, `defer` or `reject`).
 

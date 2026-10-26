@@ -124,6 +124,10 @@ The page lists the recent reports with their result. API:
 
 The **Mail log** shows every scanned message with its score breakdown: every
 rule that matched, with its score and details ([Mail log and
-statistics](mail-log.md)). Quarantined messages show the same on their page.
+statistics](mail-log.md)). Common rules are explained in plain words below
+their name (SPF and DMARC failures, block lists, the statistical filter,
+missing reverse DNS, the gateway's own checks, ...). Quarantined messages show
+the same, and **Why it was held back** lists the explained rules that added
+score, highest first; mailbox users see that list on their messages too.
 The Rspamd UI at `/rspamd/` (password `RSPAMD_PASSWORD`) has Rspamd's own
 history.

@@ -59,7 +59,7 @@ As a receiver, the gateway can send DMARC aggregate reports about the mail it
 received to the domains that ask for them (their `rua`). It is good practice
 and helps others find forgeries of their domains. Turn it on in the page's
 settings. Rspamd collects the data all the time (and forgets it after two
-days); `spamfilter-dmarc-report.timer` sends yesterday's reports daily at
+days); `crassostrea-dmarc-report.timer` sends yesterday's reports daily at
 about 01:15 from `dmarc-noreply@<hostname>`, from one node of a cluster.
 
 Sending **TLS reports** about the gateway's own deliveries needs Postfix 3.10

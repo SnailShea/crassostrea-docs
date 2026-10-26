@@ -3,6 +3,12 @@
 ```
 setup.sh                  first installation, cluster creation (--ha) and joining (--join)
 update.sh                 git fast-forward, then system/install.sh
+iso/                      the installation ISO (see Installation)
+  build.sh                stage the source, fetch and verify the AlmaLinux ISO, run assemble.sh
+  assemble.sh             kickstart, GRUB entries (BIOS, UEFI, EFI image) and payload into the ISO (xorriso, mtools)
+  crassostrea.ks          kickstart: base system, boot parameters (%pre), source and first-boot unit (%post)
+  firstboot.sh            first-boot wizard on tty1 (crassostrea-firstboot.service): runs setup.sh
+.github/workflows/iso.yml builds the ISO (Run workflow, tags v*), checks iso/ on pull requests
 system/
   install.sh              repositories, packages, user, venv, pinned tools, SELinux; calls configure.sh
   configure.sh            deploys the code and renders every service's configuration
@@ -11,12 +17,12 @@ system/
   backup.sh               backups: create, list, restore
   lib/common.sh           shared helpers: logging, write_file/create_file, load_env_file, load_config
   lib/cluster.sh          cluster helpers: HA_* parsing and validation, cluster CA, bundles
-  lib/conf.sh             conf_set: edit one setting of spamfilter.conf
+  lib/conf.sh             conf_set: edit one setting of crassostrea.conf
   lib/tls.sh              oldest TLS versions of nginx and Postfix, the legacy OpenSSL configuration
   lib/ipfamily.sh         IPV4_ENABLED/IPV6_ENABLED for Postfix, unbound and nginx
   lib/nginx.sh            the names nginx answers to (other names and addresses: 404)
   lib/docs.sh             the documentation at /docs/: fetch, build with MkDocs, nginx locations
-  libexec/                helpers deployed to /usr/local/libexec/spamfilter
+  libexec/                helpers deployed to /usr/local/libexec/crassostrea
     postfix-control         root helper for mail queue actions (socket-activated)
     log-reader              root helper that reads the journal of fixed units (socket-activated, Logs page)
     postfix-apply           relay networks, message size limit, rate limits, PTR check into Postfix
@@ -45,11 +51,11 @@ data/
   web/                    the web application
     requirements*.txt       Python dependencies (pinned)
     gunicorn.conf.py        gunicorn settings, token-redacting access log
-    spamfilter/
+    crassostrea/
       __init__.py             create_app("ui" | "internal")
-      config.py               settings from the environment (spamfilter.conf)
+      config.py               settings from the environment (crassostrea.conf)
       models.py               SQLAlchemy models, settings defaults
-      cli.py                  flask commands (see Script reference) and the column migrations
+      cli.py                  flask commands (see Script reference) and new columns of existing tables
       auth.py                 login, two-factor login, logout, account page, throttling
       internal.py             internal API for Rspamd: settings map, quarantine, mail log, reports, user reports
       forms.py, validators.py WTForms forms; input normalisation shared with the services
@@ -76,20 +82,20 @@ tests/system/             system tests with the real EL10 binaries in namespaces
 
 | Path | Content |
 | --- | --- |
-| `/etc/spamfilter/` | `spamfilter.conf`, `units.env`, TLS certificate, DNS-01 credentials, OpenSSL configuration for legacy TLS versions |
-| `/etc/pki/spamfilter/` | cluster CA and member certificate |
-| `/usr/local/lib/spamfilter/` | deployed web app, netfilter, olefy, the Python venv, `lib/` (shell libraries of the root services) |
-| `/usr/local/libexec/spamfilter/` | deployed helpers and the watchdog |
-| `/usr/local/share/spamfilter/acme.sh/` | pinned acme.sh |
+| `/etc/crassostrea/` | `crassostrea.conf`, `units.env`, TLS certificate, DNS-01 credentials, OpenSSL configuration for legacy TLS versions |
+| `/etc/pki/crassostrea/` | cluster CA and member certificate |
+| `/usr/local/lib/crassostrea/` | deployed web app, netfilter, olefy, the Python venv, `lib/` (shell libraries of the root services) |
+| `/usr/local/libexec/crassostrea/` | deployed helpers and the watchdog |
+| `/usr/local/share/crassostrea/acme.sh/` | pinned acme.sh |
 | `/usr/local/bin/postfix-tlspol` | built from a pinned commit |
-| `/etc/systemd/system/spamfilter-*` | units, timers, drop-ins |
-| `/var/lib/spamfilter/` | acme state, ACME webroot, rendered cluster templates, configuration hashes; `web/` (requests of the web app), `tls/`, `network/` (outcomes of the root services), `cluster/` (probe and maintenance state of `cluster-node`), `postfix/` (relay networks, message size limit, the maintenance map), `backups/`, `restore-<time>/` |
-| `/var/lib/spamfilter/postfix/` | `relay_networks.cidr`, `message_size_limit` (written by the web app; replaces `/etc/postfix/dynamic/`) |
+| `/etc/systemd/system/crassostrea-*` | units, timers, drop-ins |
+| `/var/lib/crassostrea/` | acme state, ACME webroot, rendered cluster templates, configuration hashes; `web/` (requests of the web app), `tls/`, `network/` (outcomes of the root services), `cluster/` (probe and maintenance state of `cluster-node`), `postfix/` (relay networks, message size limit, the maintenance map), `backups/`, `restore-<time>/` |
+| `/var/lib/crassostrea/postfix/` | `relay_networks.cidr`, `message_size_limit` (written by the web app; replaces `/etc/postfix/dynamic/`) |
 | `/etc/rspamd/custom/` | Rspamd maps (static ones from the repository, the rest written by the web app) |
 
 ## Naming
 
 The project is called Crassostrea; many technical names still say
-`spamfilter` (units, paths, the Python package, the `spamfilter` user and
+`crassostrea` (units, paths, the Python package, the `crassostrea` user and
 group, the `SF_` prefix of script variables). They are kept for compatibility
 with existing installations.

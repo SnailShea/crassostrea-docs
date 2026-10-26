@@ -4,7 +4,7 @@
 
 ```bash
 systemctl --failed
-systemctl list-units 'spamfilter*' postfix rspamd nginx valkey mariadb unbound 'clamd@*'
+systemctl list-units 'crassostrea*' postfix rspamd nginx valkey mariadb unbound 'clamd@*'
 journalctl -u <unit> -n 100
 sudo system/cluster.sh status        # in a cluster
 ```
@@ -69,13 +69,13 @@ address or queue ID) and the **Mail log**.
 
 | Symptom | Cause and fix |
 | --- | --- |
-| Browser warns about the certificate | Let's Encrypt has not issued one yet: `journalctl -u spamfilter-acme` |
-| 404 for every page | The web interface was opened by IP address or by a name that is not configured. nginx answers only to the hostname, `ADDITIONAL_SAN` and the host of `WEB_PUBLIC_URL`; add the name (Certificates & TLS, or `spamfilter.conf` and `configure.sh`) |
-| 502 Bad Gateway | `spamfilter-web` is not running: `journalctl -u spamfilter-web` |
+| Browser warns about the certificate | Let's Encrypt has not issued one yet: `journalctl -u crassostrea-acme` |
+| 404 for every page | The web interface was opened by IP address or by a name that is not configured. nginx answers only to the hostname, `ADDITIONAL_SAN` and the host of `WEB_PUBLIC_URL`; add the name (Certificates & TLS, or `crassostrea.conf` and `configure.sh`) |
+| 502 Bad Gateway | `crassostrea-web` is not running: `journalctl -u crassostrea-web` |
 | "Too many failed attempts" | Login throttling; wait 15 minutes, or `helper-scripts/reset-admin.sh` (also clears the throttling) |
 | Lost the admin password | `sudo helper-scripts/reset-admin.sh admin` |
-| Mail queue page: "not reachable" | `spamfilter-postfix-control.socket` is not active |
-| Hostname, IP addressing, Certificates & TLS or Backups: "is spamfilter-...path installed?" | The root service is missing: run `system/configure.sh`, check `systemctl status spamfilter-hostname.path spamfilter-tls.path spamfilter-network.path spamfilter-backup-request.path` |
+| Mail queue page: "not reachable" | `crassostrea-postfix-control.socket` is not active |
+| Hostname, IP addressing, Certificates & TLS or Backups: "is crassostrea-...path installed?" | The root service is missing: run `system/configure.sh`, check `systemctl status crassostrea-hostname.path crassostrea-tls.path crassostrea-network.path crassostrea-backup-request.path` |
 | An IP addressing change came back as "reverted" | The test after the change found no internet access or no name resolution for an enabled family; the page shows the log |
 | A Let's Encrypt name cannot be applied | It needs a passed staging test of exactly these names in the last 24 hours; the failed test's log on the page says why (DNS, port 80) |
 | Link protection shows "cannot be checked right now" | Valkey is not reachable |
@@ -83,7 +83,7 @@ address or queue ID) and the **Mail log**.
 
 ## Certificates
 
-`journalctl -u spamfilter-acme` shows why a request failed. The most common
+`journalctl -u crassostrea-acme` shows why a request failed. The most common
 cause is that `http://<name>/.well-known/acme-challenge/` does not reach the
 gateway: DNS, port 80 in the firewall, or a proxy in front of it. Test with
 `LE_STAGING=y` to avoid Let's Encrypt's rate limits.
@@ -105,7 +105,7 @@ sudo ausearch -m AVC -ts recent
 
 A service that fails with "Permission denied" on a database or network
 connection although the configuration is right may run in the wrong SELinux
-domain: `ps -eZ | grep spamfilter` should show `unconfined_service_t`, not
+domain: `ps -eZ | grep crassostrea` should show `unconfined_service_t`, not
 `init_t`. `update.sh` (or `system/install.sh`) restores the file labels.
 
 If a denial blocks something legitimate, report it, and meanwhile build a local
@@ -115,7 +115,7 @@ module with `sudo helper-scripts/selinux-local-policy.sh`.
 
 | Symptom | Cause and fix |
 | --- | --- |
-| "The log reader (spamfilter-logs.socket) is not reachable" | `sudo systemctl enable --now spamfilter-logs.socket` (or run `system/configure.sh`) |
+| "The log reader (crassostrea-logs.socket) is not reachable" | `sudo systemctl enable --now crassostrea-logs.socket` (or run `system/configure.sh`) |
 | A service shows no lines | It has not logged since the journal was rotated, or the level filter hides its lines |
 | Only this node's lines | Expected for everything but the Postfix log: open the page on the other node |
 
@@ -132,18 +132,18 @@ module with `sudo helper-scripts/selinux-local-policy.sh`.
 
 | Symptom | Cause and fix |
 | --- | --- |
-| A new node does not join (`mariadb` times out) | The other members do not let it in yet: they apply the new membership within a minute (`journalctl -u spamfilter-cluster` on them); check the firewall zone `spamfilter-cluster` |
+| A new node does not join (`mariadb` times out) | The other members do not let it in yet: they apply the new membership within a minute (`journalctl -u crassostrea-cluster` on them); check the firewall zone `crassostrea-cluster` |
 | Join: "The join information is invalid, used or expired" | It works once, for an hour: create a new one on a member |
 | Join: "The member's certificate does not match" | The member's certificate changed since the join information was made (a renewal): create a new one |
 | Join: the member "does not answer" | The new gateway cannot reach the member's cluster address on its HTTPS port |
-| Join stops after "added this gateway to the cluster" | The member did not hand out the bundle: `journalctl -u spamfilter-cluster` on it. The members already list the new gateway: join it with a bundle (`system/cluster.sh bundle`, `setup.sh --join`) or remove it under Settings → Cluster |
+| Join stops after "added this gateway to the cluster" | The member did not hand out the bundle: `journalctl -u crassostrea-cluster` on it. The members already list the new gateway: join it with a bundle (`system/cluster.sh bundle`, `setup.sh --join`) or remove it under Settings → Cluster |
 | A member shows "no longer in the cluster's membership" | It was removed while it was running: stop it (`system/cluster.sh leave`) and reinstall it to use it again |
 | `cluster.sh status`: database `non-Primary` | The node cannot reach a majority: network between the members, or too many members down |
 | MariaDB does not start after a power loss | Expected: [recover](high-availability.md#recovery-after-all-nodes-were-down) with `system/cluster.sh bootstrap` |
 | Valkey: "no Sentinel answers" | Sentinel is down on the members, or port 26379 is blocked |
 | The floating address does not move | keepalived needs VRRP between the nodes and a shared network segment; `journalctl -u keepalived` |
-| Monitoring → Cluster: a node "has not reported" | Its database is not reachable or out of the majority, or `spamfilter-cluster-report` stopped: `journalctl -u spamfilter-cluster-report` on it |
-| Monitoring → Cluster: "the cluster service does not report" | `spamfilter-cluster` stopped on that node: `journalctl -u spamfilter-cluster` |
-| Maintenance "requested but not in effect" | The node's `spamfilter-cluster-report` or `spamfilter-cluster` does not run, or the node is down: it applies the request when it returns |
+| Monitoring → Cluster: a node "has not reported" | Its database is not reachable or out of the majority, or `crassostrea-cluster-report` stopped: `journalctl -u crassostrea-cluster-report` on it |
+| Monitoring → Cluster: "the cluster service does not report" | `crassostrea-cluster` stopped on that node: `journalctl -u crassostrea-cluster` |
+| Maintenance "requested but not in effect" | The node's `crassostrea-cluster-report` or `crassostrea-cluster` does not run, or the node is down: it applies the request when it returns |
 | A node in maintenance still gets mail | Mail already queued is delivered; new connections get 421. Relay clients that only know this node queue the mail until maintenance ends |
 | Maintenance refused: "is needed to accept mail" | No other node is reporting, in sync and out of maintenance. Fix that first, or use `--force` |

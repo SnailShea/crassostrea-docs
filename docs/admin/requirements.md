@@ -3,7 +3,11 @@
 ## Host
 
 - A dedicated host with **EL10**: AlmaLinux 10, Rocky Linux 10 or RHEL 10.
-  x86_64 is tested; other architectures may work.
+  x86_64 is tested; other architectures may work. EL10 needs an x86-64-v3
+  CPU (Intel Haswell, AMD Excavator or newer); in a VM, give it the host's
+  CPU model (e.g. "host" in Proxmox or libvirt), not a generic one. The
+  [installation ISO](installation.md#installation-iso) installs AlmaLinux 10
+  for you.
 - **SELinux enforcing** and **firewalld** are supported and recommended.
 - Root access (the installer is run with `sudo`).
 - **RAM**: **8 GiB recommended**. A gateway with ClamAV uses about 4 GiB; the
@@ -14,7 +18,7 @@
 - **Disk**: the quarantine and the mail log are stored in the database. Plan
   for the mail log's retention (default 7 days, at most 31) times your daily
   mail volume, the quarantine's (default 14 days) times your daily rejected
-  volume, the nightly backups in `/var/lib/spamfilter/backups/` (7 by
+  volume, the nightly backups in `/var/lib/crassostrea/backups/` (7 by
   default, without the mail log's messages unless you include them), plus
   about 1 GiB for ClamAV signatures and Rspamd data.
 

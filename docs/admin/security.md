@@ -33,7 +33,9 @@ What answers without a login:
 - `/metrics`: only with the bearer token created under Settings → Alerts & export;
 - digest links: only with their token;
 - links to set a mailbox user's password (`/account/set-password/<token>`):
-  only with their token, once, until they expire.
+  only with their token, once, until they expire;
+- "forgot password" (`/login/forgot`): answers the same for every address and
+  sends at most 3 links an hour to one, 10 for one client address.
 
 Administrator logins can be limited to networks you choose, see
 [Access by network](administrators.md#access-by-network).
@@ -48,15 +50,16 @@ other address of the hostname is rejected.
 
 | Secret | Where |
 | --- | --- |
-| Database, Valkey and Rspamd passwords, session key, initial admin password | `/etc/spamfilter/spamfilter.conf` (root and group `spamfilter` only) |
-| TLS key | `/etc/spamfilter/ssl/key.pem` (0600) |
+| Database, Valkey and Rspamd passwords, session key, initial admin password | `/etc/crassostrea/crassostrea.conf` (root and group `crassostrea` only) |
+| TLS key | `/etc/crassostrea/ssl/key.pem` (0600) |
 | DKIM private keys | the database (and Valkey, for Rspamd) |
 | Directory bind passwords, Microsoft 365 client secrets | the database; never shown again in the interface or the API |
 | MalwareBazaar and VirusTotal keys | the database and Valkey (for Rspamd), not in map files |
 | Two-factor secrets | the database; recovery codes as hashes |
-| Cluster CA key and member keys | `/etc/pki/spamfilter/` |
-| API keys, the metrics token, digest link and password link tokens | stored as hashes only |
-| Backups | `/var/lib/spamfilter/backups/` (root and group `spamfilter`; files 0640): they contain all of the above |
+| Cluster CA key and member keys | `/etc/pki/crassostrea/` |
+| API keys, the metrics token, digest link and password link tokens | stored as hashes only (SHA-256) |
+| Passwords of administrators and mailbox users | scrypt (Werkzeug); hashes imported from another mail system are replaced with scrypt at the first login |
+| Backups | `/var/lib/crassostrea/backups/` (root and group `crassostrea`; files 0640): they contain all of the above |
 
 Database dumps and Valkey dumps therefore contain secrets; protect backups
 accordingly. Join bundles contain everything needed to join the cluster:
@@ -65,14 +68,14 @@ transfer them securely and delete them afterwards.
 ## Hardening built in
 
 - **Services never run from the repository**: `configure.sh` copies the code
-  to root-owned locations (`/usr/local/lib/spamfilter`,
-  `/usr/local/libexec/spamfilter`), so the account owning the checkout cannot
+  to root-owned locations (`/usr/local/lib/crassostrea`,
+  `/usr/local/libexec/crassostrea`), so the account owning the checkout cannot
   change what runs as root.
-- The web interface runs as the unprivileged `spamfilter` user with systemd
+- The web interface runs as the unprivileged `crassostrea` user with systemd
   sandboxing. Mail queue actions go through a small root helper that accepts
   only fixed actions with validated queue IDs. Changes it cannot make itself
   (hostname, certificates and TLS versions, IP addressing, backups) are
-  requests in `/var/lib/spamfilter/web/` that root services validate again
+  requests in `/var/lib/crassostrea/web/` that root services validate again
   before acting.
 - **SELinux** stays enforcing; the needed port and file labels and booleans
   are set (the programs systemd starts are labelled `bin_t`, so they run as

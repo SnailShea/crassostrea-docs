@@ -59,10 +59,10 @@ logged out. The documentation at `/docs/` follows the same rule.
 
 ```bash
 # the same user and environment as the web interface; --clear allows any address again
-sudo systemd-run --quiet --wait --pipe --collect --uid=spamfilter --gid=spamfilter \
-  --property=EnvironmentFile=/etc/spamfilter/spamfilter.conf \
-  --setenv=PYTHONPATH=/usr/local/lib/spamfilter/web --working-directory=/usr/local/lib/spamfilter/web \
-  /usr/local/lib/spamfilter/venv/bin/flask --app spamfilter admin-networks --add 203.0.113.0/24
+sudo systemd-run --quiet --wait --pipe --collect --uid=crassostrea --gid=crassostrea \
+  --property=EnvironmentFile=/etc/crassostrea/crassostrea.conf \
+  --setenv=PYTHONPATH=/usr/local/lib/crassostrea/web --working-directory=/usr/local/lib/crassostrea/web \
+  /usr/local/lib/crassostrea/venv/bin/flask --app crassostrea admin-networks --add 203.0.113.0/24
 ```
 
 Without options the command shows the list.
@@ -96,17 +96,17 @@ Someone who lost their phone and recovery codes needs another administrator
 
 ```bash
 # the same user and environment as the web interface (as helper-scripts/reset-admin.sh does)
-sudo systemd-run --quiet --wait --pipe --collect --uid=spamfilter --gid=spamfilter \
-  --property=EnvironmentFile=/etc/spamfilter/spamfilter.conf \
-  --setenv=PYTHONPATH=/usr/local/lib/spamfilter/web --working-directory=/usr/local/lib/spamfilter/web \
-  /usr/local/lib/spamfilter/venv/bin/flask --app spamfilter reset-2fa USERNAME
+sudo systemd-run --quiet --wait --pipe --collect --uid=crassostrea --gid=crassostrea \
+  --property=EnvironmentFile=/etc/crassostrea/crassostrea.conf \
+  --setenv=PYTHONPATH=/usr/local/lib/crassostrea/web --working-directory=/usr/local/lib/crassostrea/web \
+  /usr/local/lib/crassostrea/venv/bin/flask --app crassostrea reset-2fa USERNAME
 ```
 
 ## Audit log
 
 **Access → Audit log** records every change made in the web interface or
 through the API, every login (failed ones under the name that was tried) and
-the account commands of `flask --app spamfilter`:
+the account commands of `flask --app crassostrea`:
 
 | Column | Content |
 | --- | --- |

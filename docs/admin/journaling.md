@@ -24,7 +24,7 @@ mail.
   envelope sender, **every recipient** (Bcc recipients too, which the message
   itself does not show), the Message-ID, direction, time, client and spam
   filter result, and the original message attached unchanged, byte for byte
-  (`message/rfc822`). Its header `X-Spamfilter-Journal` says the direction.
+  (`message/rfc822`). Its header `X-Crassostrea-Journal` says the direction.
 - **Copy of the message**: the message itself, sent to the archive address.
   For archives that cannot read journal reports; the envelope (Bcc
   recipients) is lost.
@@ -32,7 +32,7 @@ mail.
 ## Delivery
 
 When the mail log stores a message, it is queued in Valkey;
-`spamfilter-journal.service` sends the copies through Postfix's local port
+`crassostrea-journal.service` sends the copies through Postfix's local port
 without the filter, so a journal copy is neither scanned nor logged again. If
 the archive cannot be reached, copies wait in Valkey and are sent later; the
 page shows how many wait, how many were sent and the last error. Mail is

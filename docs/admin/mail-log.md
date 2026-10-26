@@ -9,14 +9,11 @@ and action, or search the subject, sender, recipients, `From` header,
 Message-ID, queue ID or client address. The list updates itself like the other
 live pages.
 
-It replaces the earlier *Scan history*, which only kept Rspamd's last scans in
-Valkey: the mail log keeps each message in full, in the database.
-
 A message's page shows:
 
 - its details: queue ID, Message-ID, client address, size, scan time;
 - the **score breakdown**: every Rspamd rule that matched, with its score and
-  details, highest first;
+  details, highest first, and for common rules what they mean;
 - the **text** and, for messages with an HTML body, a switch between the plain
   text and the **HTML** (see below);
 - attachments and all headers;
@@ -56,7 +53,7 @@ The mail log is no archive; for long-term copies of all mail see
 
 | Setting | Default | Effect |
 | --- | --- | --- |
-| Maximum message size | 50 MiB (at most 100) | Postfix's `message_size_limit`: larger messages are refused during the SMTP dialogue. Applied by `spamfilter-postfix-reload.service` within seconds |
+| Maximum message size | 50 MiB (at most 100) | Postfix's `message_size_limit`: larger messages are refused during the SMTP dialogue. Applied by `crassostrea-postfix-reload.service` within seconds |
 | Maximum attachment size | 0 (no limit) | Rspamd rejects messages with a larger attachment (its decoded size), symbol `ATTACHMENT_TOO_LARGE` |
 
 Every accepted message is scanned in full, by ClamAV too: up to 128 MiB per
@@ -79,8 +76,7 @@ and the number of viruses, as totals and as a bar chart, for the last 24 hours
 (one bar per hour), 7 days (per 6 hours), 30 days (per day) or 12 months (per
 30 days). Filter by direction and domain; the busiest domains, the quarantine
 counts and the recent mail follow the filter. Domain administrators see their
-domains only. The same data is available as `GET /api/v1/statistics`; the
-former Statistics page (`/statistics/`) leads to the dashboard.
+domains only. The same data is available as `GET /api/v1/statistics`.
 
 The counts are hourly totals per domain, direction and outcome, added as the
 mail log stores each message, and kept for **two years** (setting

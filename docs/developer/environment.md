@@ -32,11 +32,11 @@ export HOSTNAME_REQUEST=/tmp/crassostrea-web/hostname TLS_REQUEST=/tmp/crassostr
        TLS_UPLOAD_DIR=/tmp/crassostrea-web/tls-upload TLS_STATUS=/tmp/crassostrea-web/tls-status.json \
        IP_REQUEST=/tmp/crassostrea-web/ip-request.json IP_STATUS=/tmp/crassostrea-web/ip-status.json \
        BACKUP_REQUEST=/tmp/crassostrea-web/backup-request.json BACKUP_DIR=/tmp/crassostrea-backups \
-       SF_CONF=/tmp/crassostrea-web/spamfilter.conf
+       SF_CONF=/tmp/crassostrea-web/crassostrea.conf
 mkdir -p "$RSPAMD_MAP_DIR" "$POSTFIX_DYNAMIC_DIR" /tmp/crassostrea-web /tmp/crassostrea-backups
 
-.venv/bin/flask --app spamfilter init-db
-.venv/bin/flask --app spamfilter run --debug
+.venv/bin/flask --app crassostrea init-db
+.venv/bin/flask --app crassostrea run --debug
 ```
 
 Open `http://127.0.0.1:5000/` and log in as `admin` / `admin-password`.
@@ -52,30 +52,30 @@ Certificates & TLS, IP addressing, backups) write their request files, and
 nothing applies them. DNS & ports, directories, link checks and hash lookups
 make real network requests.
 
-Useful settings (environment variables, see `spamfilter/config.py`):
+Useful settings (environment variables, see `crassostrea/config.py`):
 
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | SQLAlchemy URL; SQLite for development, MariaDB on the gateway (built from `DBUSER`, `DBPASS`, `DBNAME`) |
 | `REDIS_HOST`, `REDIS_PORT_INTERNAL`, `REDISPASS` | Valkey |
 | `RSPAMD_URL`, `RSPAMD_PASSWORD` | Rspamd controller (`http://127.0.0.1:11334`) |
-| `RSPAMD_MAP_DIR`, `POSTFIX_DYNAMIC_DIR` | Where maps are written (on the gateway `/etc/rspamd/custom`, `/var/lib/spamfilter/postfix`) |
+| `RSPAMD_MAP_DIR`, `POSTFIX_DYNAMIC_DIR` | Where maps are written (on the gateway `/etc/rspamd/custom`, `/var/lib/crassostrea/postfix`) |
 | `POSTFIX_CONTROL_SOCKET` | Socket of the queue helper |
-| `HOSTNAME_REQUEST`, `TLS_REQUEST`, `TLS_UPLOAD_DIR`, `TLS_STATUS`, `IP_REQUEST`, `IP_STATUS`, `BACKUP_REQUEST`, `BACKUP_DIR` | Request files of the root services and their outcomes (on the gateway below `/var/lib/spamfilter/`) |
-| `SF_CONF` | `spamfilter.conf`, read for the settings the pages show (`services/sysconf.py`) |
+| `HOSTNAME_REQUEST`, `TLS_REQUEST`, `TLS_UPLOAD_DIR`, `TLS_STATUS`, `IP_REQUEST`, `IP_STATUS`, `BACKUP_REQUEST`, `BACKUP_DIR` | Request files of the root services and their outcomes (on the gateway below `/var/lib/crassostrea/`) |
+| `SF_CONF` | `crassostrea.conf`, read for the settings the pages show (`services/sysconf.py`) |
 | `HA_NODES`, `HA_WITNESS` | Make the app behave like a cluster node (dashboard card, node names, job locks) |
 
 The internal API (what Rspamd fetches) is a second app:
 
 ```bash
-.venv/bin/flask --app "spamfilter:create_app('internal')" run --port 8001
+.venv/bin/flask --app "crassostrea:create_app('internal')" run --port 8001
 curl http://127.0.0.1:8001/internal/rspamd/settings
 # a DMARC report as Rspamd would hand it over
 curl --data-binary @report.eml -H 'Content-Type: message/rfc822' http://127.0.0.1:8001/internal/reports
 ```
 
 Test data: create domains and users in the UI or with the API, and add
-quarantine items from a Python shell (`flask --app spamfilter shell`) with the
+quarantine items from a Python shell (`flask --app crassostrea shell`) with the
 `QuarantineItem` model, as the tests do.
 
 ## Dry-run rendering
@@ -85,7 +85,7 @@ directory, without root and without changing the system:
 
 ```bash
 WORK=$(mktemp -d)
-export SF_ROOT=$WORK/root SF_CONF=$WORK/root/etc/spamfilter/spamfilter.conf
+export SF_ROOT=$WORK/root SF_CONF=$WORK/root/etc/crassostrea/crassostrea.conf
 export SF_DRYRUN=y SF_ASN_RESPONSE=200
 
 # a configuration, created like setup.sh does (it insists on root: a user namespace is enough)
@@ -142,8 +142,8 @@ Three VMs on one private network (two nodes and a witness, or three nodes):
 sudo ./setup.sh --hostname mx1.test.example --yes --ha \
   --ha-nodes mx1.test.example=10.0.0.1,mx2.test.example=10.0.0.2 \
   --ha-witness w.test.example=10.0.0.3 --ha-vip none
-# copy /root/spamfilter-join-*.tar to the others, then on each:
-sudo ./setup.sh --join /root/spamfilter-join-<hostname>.tar
+# copy /root/crassostrea-join-*.tar to the others, then on each:
+sudo ./setup.sh --join /root/crassostrea-join-<hostname>.tar
 sudo system/cluster.sh status
 ```
 

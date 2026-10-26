@@ -2,7 +2,7 @@
 
 One certificate covers `CRASSOSTREA_HOSTNAME` and the names in
 `ADDITIONAL_SAN`. nginx (web interface) and Postfix (STARTTLS) use it from
-`/etc/spamfilter/ssl/cert.pem` and `key.pem`.
+`/etc/crassostrea/ssl/cert.pem` and `key.pem`.
 
 Until a certificate has been issued, `configure.sh` creates a self-signed one,
 so both services start right away.
@@ -11,8 +11,8 @@ so both services start right away.
 
 **Network → Certificates & TLS** shows the installed certificate (names,
 issuer, validity, key) and manages it on a single gateway. A root service
-(`spamfilter-tls.path`, `system/libexec/tls-apply`) carries out the changes,
-writes them to `spamfilter.conf` (so `configure.sh` keeps them) and records
+(`crassostrea-tls.path`, `system/libexec/tls-apply`) carries out the changes,
+writes them to `crassostrea.conf` (so `configure.sh` keeps them) and records
 the outcome, which the page shows with its log. In a cluster each member has
 its own certificate and settings: the page only shows them.
 
@@ -64,7 +64,7 @@ API: `GET /api/v1/tls` and the `/tls/...` endpoints.
 
 ## Let's Encrypt (default)
 
-`spamfilter-acme.timer` runs `spamfilter-acme.service` shortly after boot and
+`crassostrea-acme.timer` runs `crassostrea-acme.service` shortly after boot and
 daily. It uses acme.sh (a pinned version installed by `install.sh`) and:
 
 1. checks for every name that it reaches this host over HTTP (a test file in
@@ -73,9 +73,9 @@ daily. It uses acme.sh (a pinned version installed by `install.sh`) and:
 2. requests or renews the certificate (renewal happens when it is due);
 3. installs it and reloads nginx and restarts Postfix.
 
-Request it immediately with `sudo systemctl start spamfilter-acme`, and follow
-it with `journalctl -u spamfilter-acme`. A failure is reported by the watchdog.
-`/usr/local/libexec/spamfilter/acme --staging-test NAME...` runs the staging
+Request it immediately with `sudo systemctl start crassostrea-acme`, and follow
+it with `journalctl -u crassostrea-acme`. A failure is reported by the watchdog.
+`/usr/local/libexec/crassostrea/acme --staging-test NAME...` runs the staging
 test of the web interface from the shell.
 
 ### HTTP-01 (default)
@@ -94,7 +94,7 @@ ACME_DNS_CHALLENGE=y
 ACME_DNS_PROVIDER=dns_cf        # an acme.sh DNS API
 ```
 
-Put the provider's credentials into `/etc/spamfilter/acme/dns-01.conf`
+Put the provider's credentials into `/etc/crassostrea/acme/dns-01.conf`
 (created with an example), e.g. for Cloudflare:
 
 ```bash
@@ -114,12 +114,12 @@ See the acme.sh documentation for the variables of other providers. Run
 | `SKIP_HTTP_VERIFICATION=y` | Skips the reachability check |
 
 To force a new certificate (e.g. after changing `ADDITIONAL_SAN` in the file),
-create `/var/lib/spamfilter/acme/force_renew` and start `spamfilter-acme`.
+create `/var/lib/crassostrea/acme/force_renew` and start `crassostrea-acme`.
 
 ## Your own certificate without the web interface
 
 Set `SKIP_LETS_ENCRYPT=y`, put the certificate chain and key into
-`/etc/spamfilter/ssl/cert.pem` and `key.pem` (key mode 0600), and reload:
+`/etc/crassostrea/ssl/cert.pem` and `key.pem` (key mode 0600), and reload:
 
 ```bash
 sudo systemctl reload nginx && sudo systemctl restart postfix
@@ -134,7 +134,7 @@ your Let's Encrypt account to issue certificates for the name:
 
 ```bash
 python3 helper-scripts/generate_caa_record.py --account-key \
-  /var/lib/spamfilter/acme/ca/acme-v02.api.letsencrypt.org/directory/account.key
+  /var/lib/crassostrea/acme/ca/acme-v02.api.letsencrypt.org/directory/account.key
 ```
 
 **DNS & ports** checks that the hostname's CAA records allow Let's Encrypt

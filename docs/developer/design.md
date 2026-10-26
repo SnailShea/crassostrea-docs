@@ -5,17 +5,17 @@ changing the areas it covers.
 
 ## Host packages instead of containers
 
-Crassostrea started as a Docker Compose stack derived from mailcow: dockerized.
-It now runs on the host with distribution packages because:
+Crassostrea runs on the host with distribution packages, not in containers,
+because:
 
-- a mail gateway is a single-purpose host; containers added a second update
-  channel (images) next to the OS and a privileged control path (the Docker
-  API) that the web UI needed for queue actions and restarts;
+- a mail gateway is a single-purpose host; containers would add a second update
+  channel (images) next to the OS and a privileged control path (a container
+  API) for the web UI's queue actions and restarts;
 - EL10 ships everything needed (Postfix, Valkey, MariaDB with Galera,
   nginx, haproxy, keepalived; Rspamd and ClamAV from their repositories), with
   security updates through `dnf` and SELinux policies;
-- systemd provides what Compose did (dependencies, restarts, sandboxing,
-  timers instead of ofelia, socket activation instead of the Docker API).
+- systemd provides what an orchestrator would (dependencies, restarts,
+  sandboxing, timers, socket activation for the root helpers).
 
 Consequences: services share one host and the loopback interface, so the
 internal services still require passwords; the code that runs as root is
@@ -26,13 +26,13 @@ deployed root-owned (next section).
 The repository is usually owned by an unprivileged user. If services ran from
 it, that user could change code that runs as root. `configure.sh` therefore
 copies the web app, netfilter, olefy and the helpers to
-`/usr/local/lib/spamfilter` and `/usr/local/libexec/spamfilter` (owned by
+`/usr/local/lib/crassostrea` and `/usr/local/libexec/crassostrea` (owned by
 root), and the units only reference those copies. `update.sh` runs `git` as the
 checkout's owner and everything else as root.
 
 ## One configuration file, never sourced
 
-`/etc/spamfilter/spamfilter.conf` is both the scripts' configuration and the
+`/etc/crassostrea/crassostrea.conf` is both the scripts' configuration and the
 units' `EnvironmentFile`. Scripts read it with `load_env_file`, which parses
 `KEY=value` lines the way systemd does (one pair of quotes removed, nothing
 expanded or executed) instead of sourcing it, so a value with `$(...)` or
@@ -53,17 +53,17 @@ content visible in one place and needs no extra tools. Rules:
 - the script is idempotent and safe to run any time;
 - hooks in `data/hooks/<component>/` cover what it does not know.
 
-## Mail queue access without the Docker API
+## Mail queue access for the web UI
 
 The web UI runs unprivileged but must list, show and act on the Postfix queue.
-`spamfilter-postfix-control.socket` is a unix socket only the `spamfilter`
+`crassostrea-postfix-control.socket` is a unix socket only the `crassostrea`
 group may open; systemd starts a root helper per connection
 (`Accept=yes`). The helper reads one JSON request, allows only fixed actions,
 validates every queue ID (`^[0-9A-Za-z]{6,32}$`) and passes IDs to `postsuper`
 on standard input, never as arguments. Postfix reloads after relay network
 changes are done by a path unit watching the file, not by the web UI.
 
-The Logs page reads the journal the same way: `spamfilter-logs.socket` starts
+The Logs page reads the journal the same way: `crassostrea-logs.socket` starts
 `log-reader` as root per connection. The web UI names a source ("rspamd",
 "jobs", ...); the helper maps it to its own list of units and runs
 `journalctl` without a shell, with the number of lines and the priority
@@ -115,7 +115,7 @@ alone. Personal entries once leaked into the global maps exactly that way.
 
 ## One service layer for UI and API
 
-Business rules live in `data/web/spamfilter/services/`:
+Business rules live in `data/web/crassostrea/services/`:
 
 - `accounts.py`: administrators (roles, domains), mailbox users, personal
   lists, thresholds;
@@ -129,7 +129,7 @@ Business rules live in `data/web/spamfilter/services/`:
   `certificates.py`, `hostname.py`, `ipconfig.py`, `netcheck.py`,
   `html_preview.py`;
 - `quarantine.py`, `digest.py`, `maps.py`, `postfix_control.py`, `store.py`,
-  `sysconf.py` (reads `spamfilter.conf`).
+  `sysconf.py` (reads `crassostrea.conf`).
 
 Views and API routes parse input (forms or JSON), call a service function,
 commit, and call `sync_all()` when filter configuration changed. Services raise
@@ -193,9 +193,8 @@ listed with that page, so the right group stays active.
 
 ## Mail log in the database
 
-The earlier scan history showed Rspamd's own history in Valkey: a few
-thousand entries, without the message. The mail log stores every scanned
-message in full in MariaDB (the metadata exporter posts it to the internal
+Rspamd's own history in Valkey keeps a few thousand entries, without the
+message. The mail log stores every scanned message in full in MariaDB (the metadata exporter posts it to the internal
 API), so it survives restarts, is shared in a cluster, can be searched,
 opened, downloaded and queued again. The price is disk space; retention is
 capped at 31 days, and `models.MAX_MESSAGE_MB` sizes Rspamd's `max_message`,
@@ -203,8 +202,7 @@ the internal API's request limit and MariaDB's `max_allowed_packet` together.
 
 Statistics are not computed from the mail log: `stats.record()` adds the
 message to an hourly counter (an upsert, `ON DUPLICATE KEY UPDATE`, safe with
-concurrent workers and Galera) so they outlive the mail log. `stats.backfill()`
-fills an empty table once from the mail log.
+concurrent workers and Galera) so they outlive the mail log.
 
 ## Root services for the web UI
 
@@ -213,7 +211,7 @@ hostname, the time zone, certificates and TLS versions, IP addressing,
 backups, and the Postfix settings. They all follow one pattern:
 
 1. the web UI validates the input and writes a **request file** into
-   `/var/lib/spamfilter/web/` (owned by `spamfilter`);
+   `/var/lib/crassostrea/web/` (owned by `crassostrea`);
 2. a **path unit** (`PathExists=`, or `PathChanged=` for the Postfix files and
    the time zone, which stay) starts a root service: `set-hostname`,
    `set-timezone`, `tls-apply`, `network-apply`,
@@ -221,12 +219,12 @@ backups, and the Postfix settings. They all follow one pattern:
 3. the service **consumes** the request first (so the path unit does not loop
    on a bad one), **validates it again** (the web UI is not trusted), applies
    it, and writes its outcome as JSON to a root-owned directory the web UI
-   reads (`/var/lib/spamfilter/tls/`, `network/`, `timezone/`, `backups/status.json`);
-4. settings go into `spamfilter.conf` with `conf_set` (`system/lib/conf.sh`),
+   reads (`/var/lib/crassostrea/tls/`, `network/`, `timezone/`, `backups/status.json`);
+4. settings go into `crassostrea.conf` with `conf_set` (`system/lib/conf.sh`),
    so later `configure.sh` runs keep them.
 
 The shell libraries these services share with `configure.sh` (`conf.sh`,
-`tls.sh`, `ipfamily.sh`) are deployed to `/usr/local/lib/spamfilter/lib/`, so
+`tls.sh`, `ipfamily.sh`) are deployed to `/usr/local/lib/crassostrea/lib/`, so
 both render the same way. Services that test and roll back
 (`network-apply`) keep the previous state until the test passed. On a
 cluster member the pages refuse: the hostname, addresses and certificates
@@ -370,7 +368,7 @@ Two details matter:
   its main configuration file, and Valkey then copies *all* settings,
   including those from included files, into it. Those copies would override
   later changes (password, bind address, the switch back to a single gateway).
-  In a cluster Valkey therefore starts from `/etc/spamfilter-valkey.conf`,
+  In a cluster Valkey therefore starts from `/etc/crassostrea-valkey.conf`,
   which it cannot write; the rewrite fails harmlessly and `valkey-role` decides
   the role at start.
 
@@ -412,7 +410,7 @@ runs the same `setup.sh --join` as on the command line, so there is one way to
 join, whichever starts it; creating runs `setup.sh --ha`.
 
 Members restart MariaDB, Valkey and Sentinel only when their rendered
-configuration changed (hashes in `/var/lib/spamfilter/config-hashes`), because
+configuration changed (hashes in `/var/lib/crassostrea/config-hashes`), because
 every restart removes a vote and may cause a failover.
 
 ### Trust: a private CA and join bundles
@@ -471,4 +469,4 @@ their state instead of recovering.
 
 - Cluster addresses are IPv4.
 - Mail queues stay per node; a failed node's queued mail waits for it.
-- `spamfilter.conf` is kept in sync by the administrator, not replicated.
+- `crassostrea.conf` is kept in sync by the administrator, not replicated.

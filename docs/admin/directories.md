@@ -6,7 +6,7 @@ other addresses of the domain is rejected during the SMTP dialogue.
 
 ## How it works
 
-Every 15 minutes (`spamfilter-job-directories.timer`) the gateway reads all
+Every 15 minutes (`crassostrea-job-directories.timer`) the gateway reads all
 addresses of each directory and copies those of the domains that use it into
 their **recipient lists**, marked as coming from the directory. Addresses you
 added by hand stay. Postfix only reads the recipient lists, so:
@@ -60,8 +60,8 @@ synchronisation fails (and alerts).
 
 ## Commands and API
 
-- `flask --app spamfilter sync-directories` (as the job does:
-  `sudo systemctl start spamfilter-job@sync-directories`)
+- `flask --app crassostrea sync-directories` (as the job does:
+  `sudo systemctl start crassostrea-job@sync-directories`)
 - `/api/v1/directories` with `/test` and `/sync` (`{"force": true}`);
   passwords and secrets can be set but are never returned
 - Deleting a directory is refused while a domain uses it; its addresses stay in

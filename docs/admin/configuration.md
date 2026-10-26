@@ -2,12 +2,12 @@
 
 ## The configuration file
 
-All settings of the host live in **`/etc/spamfilter/spamfilter.conf`**. It
+All settings of the host live in **`/etc/crassostrea/crassostrea.conf`**. It
 contains `KEY=value` lines and is read like a systemd `EnvironmentFile`:
 values are taken literally, one pair of surrounding quotes is removed, nothing
 is expanded or executed. Quote values that contain spaces.
 
-`setup.sh` creates the file; it is readable by root and the `spamfilter`
+`setup.sh` creates the file; it is readable by root and the `crassostrea`
 group only, because it contains all passwords.
 
 **After a change**, apply it:
@@ -79,7 +79,7 @@ so you can change it here and apply it.
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `IPV4_ENABLED` | `true` | The gateway uses IPv4 (Postfix, unbound, nginx). `true`/`false`; at least one of the two. The IP addressing page sets it: `true` while any interface has IPv4 |
-| `IPV6_ENABLED` | detected | The same for IPv6. Replaces `ENABLE_IPV6` of earlier versions, which `configure.sh` renames in the file |
+| `IPV6_ENABLED` | detected | The same for IPv6. |
 
 Loopback keeps both families whatever is set. See
 [IP addressing](network.md#ip-addressing).
@@ -89,9 +89,9 @@ Loopback keeps both families whatever is set. See
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `ADDITIONAL_SAN` | empty | Comma separated additional names for the certificate. nginx answers only to these, the hostname and the host of `WEB_PUBLIC_URL`; other names and IP addresses get 404 |
-| `SKIP_LETS_ENCRYPT` | `n` | `y`: keep the self-signed or your own certificate in `/etc/spamfilter/ssl/{cert,key}.pem` |
+| `SKIP_LETS_ENCRYPT` | `n` | `y`: keep the self-signed or your own certificate in `/etc/crassostrea/ssl/{cert,key}.pem` |
 | `ACME_DNS_CHALLENGE` | `n` | `y`: validate with DNS-01 instead of HTTP-01 |
-| `ACME_DNS_PROVIDER` | `dns_xxx` | The acme.sh DNS API, e.g. `dns_cf`; credentials go into `/etc/spamfilter/acme/dns-01.conf` |
+| `ACME_DNS_PROVIDER` | `dns_xxx` | The acme.sh DNS API, e.g. `dns_cf`; credentials go into `/etc/crassostrea/acme/dns-01.conf` |
 | `ACME_ACCOUNT_EMAIL` | `me@example.com` | Contact address of the Let's Encrypt account (the placeholder registers without one) |
 | `SKIP_HTTP_VERIFICATION` | `n` | `y`: skip the check that every name reaches this host over HTTP before requesting |
 | `LE_STAGING` | `n` | `y`: use the Let's Encrypt staging environment (for tests) |
@@ -106,7 +106,7 @@ See [Certificates](certificates.md).
 | `SKIP_CLAMD` | `n` (`y` offered on small hosts) | `y`: no ClamAV virus scanning |
 | `SKIP_OLEFY` | `n` | `y`: no Olefy macro scanning of Office documents |
 | `SPAMHAUS_DQS_KEY` | empty | Spamhaus Data Query Service key. Without it, the Spamhaus lists are disabled on networks that Spamhaus blocks |
-| `MANAGE_RESOLVER` | `y` | Make the local unbound the system resolver (`/etc/resolv.conf`, NetworkManager stops managing it). The original file is kept as `/etc/resolv.conf.spamfilter-orig` |
+| `MANAGE_RESOLVER` | `y` | Make the local unbound the system resolver (`/etc/resolv.conf`, NetworkManager stops managing it). The original file is kept as `/etc/resolv.conf.crassostrea-orig` |
 | `HAPROXY_LISTENER` | `n` | `y`: an additional SMTP listener that expects the PROXY protocol, for an HAProxy in front of the gateway |
 | `HAPROXY_LISTENER_BIND` | `127.0.0.1:10025` | Address of that listener. Only expose it to the proxy: its clients can claim any source address |
 
@@ -114,7 +114,7 @@ See [Certificates](certificates.md).
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `USE_WATCHDOG` | `y` | Run `spamfilter-watchdog`, which checks the services and restarts unhealthy ones |
+| `USE_WATCHDOG` | `y` | Run `crassostrea-watchdog`, which checks the services and restarts unhealthy ones |
 | `WATCHDOG_NOTIFY_EMAIL` | unset | Comma separated recipients of notifications (no spaces, no quotes), sent from `watchdog@CRASSOSTREA_HOSTNAME` |
 | `WATCHDOG_NOTIFY_WEBHOOK` | unset | URL that receives notifications as JSON POST |
 | `WATCHDOG_NOTIFY_WEBHOOK_BODY` | unset | JSON body in single quotes; `${SUBJECT}` and `${BODY}` are replaced |

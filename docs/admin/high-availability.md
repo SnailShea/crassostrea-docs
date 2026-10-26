@@ -37,14 +37,14 @@ flowchart LR
 | Certificates | Each node gets its own; HTTP-01 challenges for names shared by several nodes are answered by whichever node requested them |
 | Web interface and API | On every node with the same logins; optionally a floating address (`HA_VIP`) for one shared name |
 | Postfix queue, ClamAV, unbound, Rspamd's scan counters, backups, `/metrics` | Per node |
-| Hostname, IP addressing, certificate settings, TLS versions | Per node in `spamfilter.conf`; the web interface does not change them on a member |
+| Hostname, IP addressing, certificate settings, TLS versions | Per node in `crassostrea.conf`; the web interface does not change them on a member |
 | Report and reporting addresses (`reports@`, `spam@`, `ham@`) | Each node accepts them at its own hostname |
 
-Replication uses **TLS with a private cluster CA** (`/etc/pki/spamfilter/`)
+Replication uses **TLS with a private cluster CA** (`/etc/pki/crassostrea/`)
 that setup creates. Nodes and Valkey clients authenticate with certificates
 from it; a host with a certificate from another CA cannot join. The cluster
 ports are only opened to the other members (firewalld zone
-`spamfilter-cluster`).
+`crassostrea-cluster`).
 
 ## Quorum
 
@@ -63,7 +63,10 @@ the failure of a member only from three votes on:
 With an odd number of votes the cluster survives the loss of
 `(votes - 1) / 2` members, e.g. one of three. Like Proxmox, a cluster may
 start with one node and grow: with one or two votes it works, but a failure
-stops it (with two nodes, either node's failure stops both). Monitoring → Cluster,
+stops it (with two nodes, either node's failure stops both). A cluster of one
+node (no witness) starts its database on its own after a reboot or a restart,
+like a single gateway: having nobody to join, it forms the cluster again at
+every start. Monitoring → Cluster,
 Settings → Cluster and `configure.sh` warn until there are three votes; with an even number they
 warn about network splits.
 
@@ -114,7 +117,7 @@ gateway first (`setup.sh`, see [Installation](installation.md)).
    a password.
 3. **Join.** Under Settings → Cluster of the new gateway, **Join a cluster**: paste the
    join information and choose this server's cluster address. Its root service
-   (`spamfilter-cluster-setup`) contacts the member over HTTPS at the member's
+   (`crassostrea-cluster-setup`) contacts the member over HTTPS at the member's
    cluster address, accepted only with the certificate of the fingerprint. The
    member adds the new gateway to the cluster's membership; **every member
    then opens its firewall and updates its configuration by itself** (Galera,
@@ -156,14 +159,14 @@ sudo ./setup.sh --hostname mx1.example.com --yes --ha \
 ```
 
 It leaves a **join bundle** per listed member in
-`/root/spamfilter-join-<hostname>.tar` (also `system/cluster.sh bundle
+`/root/crassostrea-join-<hostname>.tar` (also `system/cluster.sh bundle
 HOSTNAME` on a full node). It contains the configuration with all passwords and
 the cluster CA: copy it securely (e.g. `scp`) and delete it afterwards. On each
 other member, one after another:
 
 ```bash
 git clone <repository URL> /opt/crassostrea && cd /opt/crassostrea
-sudo ./setup.sh --join /root/spamfilter-join-mx2.example.com.tar
+sudo ./setup.sh --join /root/crassostrea-join-mx2.example.com.tar
 ```
 
 ### A witness host
@@ -177,7 +180,7 @@ sudo system/cluster.sh members --nodes <the nodes> --witness witness.example.com
 sudo system/cluster.sh bundle witness.example.com
 ```
 
-then `sudo ./setup.sh --join /root/spamfilter-join-witness.example.com.tar` on
+then `sudo ./setup.sh --join /root/crassostrea-join-witness.example.com.tar` on
 the witness. It does not see later changes of the nodes by itself: after
 adding or removing a node, run `system/cluster.sh members` there too; the
 Settings → Cluster shows the command with the current members.
@@ -202,7 +205,7 @@ Mail does not need it: senders use the MX records.
 
 ## Day-to-day
 
-`spamfilter.conf` is the same on all members except `CRASSOSTREA_HOSTNAME`
+`crassostrea.conf` is the same on all members except `CRASSOSTREA_HOSTNAME`
 (and, if you set them differently, the TLS versions).
 Settings you change (e.g. `SKIP_CLAMD`) have to be changed on every node,
 followed by `system/configure.sh` there. A member restarts its database,
@@ -250,9 +253,9 @@ node; maintenance, the Valkey master and the members are managed under
   version (git commit); for the witness, whether its Sentinel answers and its
   arbitrator counts.
 
-Every node reports every 10 seconds: `spamfilter-cluster-report.service`
+Every node reports every 10 seconds: `crassostrea-cluster-report.service`
 writes its row of the shared database (`cluster_reports`), including what the
-root service `spamfilter-cluster.service` finds with the cluster certificate
+root service `crassostrea-cluster.service` finds with the cluster certificate
 (Valkey, Sentinel, the floating address). A node that has not reported for a
 minute counts as missing. The witness runs no web interface: it is seen through
 the nodes (its Sentinel answers them; the arbitrator is counted from the
@@ -271,7 +274,7 @@ database cluster's size).
 | A filesystem is 90% full | warning |
 | Maintenance was requested a minute ago but is not in effect | warning |
 | No node accepts mail (all in maintenance or out of sync) | critical |
-| A node's cluster service (`spamfilter-cluster`) does not report | warning |
+| A node's cluster service (`crassostrea-cluster`) does not report | warning |
 
 The [alert mail](monitoring.md#alert-mail) reports the same problems, and
 `/metrics` has them as [`sf_cluster_*`](monitoring.md#prometheus).
@@ -299,7 +302,7 @@ it is in effect.
 
 The request is stored in the database (`cluster_control`), so it survives
 restarts and applies to a node that is down once it returns. Each node's
-`spamfilter-cluster.service` (`system/libexec/cluster-node`) carries it out
+`crassostrea-cluster.service` (`system/libexec/cluster-node`) carries it out
 and checks every 10 seconds that it is still in effect.
 
 ### Valkey master
@@ -314,8 +317,8 @@ haproxy within a second or two.
 
 The membership is stored in the cluster's database (`cluster_membership`):
 every node applies a change by itself within a minute (`HA_NODES` and
-`HA_WITNESS` in its `spamfilter.conf`, firewall, Galera, haproxy, Sentinel,
-keepalived; done by `spamfilter-cluster`, without restarting the database).
+`HA_WITNESS` in its `crassostrea.conf`, firewall, Galera, haproxy, Sentinel,
+keepalived; done by `crassostrea-cluster`, without restarting the database).
 
 **Add a node**: [join it](#setting-up-a-cluster) with a join information.
 
@@ -354,7 +357,9 @@ page and the alert mail show which member is affected.
 
 ### Recovery after all nodes were down
 
-Run `sudo system/cluster.sh bootstrap` on the node that stopped last. If that
+A cluster of one node needs nothing: it forms the cluster again when it
+starts. With several members, run `sudo system/cluster.sh bootstrap` on the
+node that stopped last. If that
 node did not stop cleanly, the command refuses and shows the node's position
 in the database history; compare it with the other nodes (`galera_recovery`
 there) and run `system/cluster.sh bootstrap --force` on the most advanced one.

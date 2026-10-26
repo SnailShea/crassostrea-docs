@@ -55,7 +55,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 
 | Area | Endpoints |
 | --- | --- |
-| Domains | `GET/POST /domains`, `GET/PATCH/DELETE /domains/{id}` |
+| Domains | `GET/POST /domains`, `GET/PATCH/DELETE /domains/{id}`, `POST /domains/{id}/test-destination` |
 | Recipients | `GET/POST /domains/{id}/recipients`, `DELETE /domains/{id}/recipients/{rid}` |
 | Domain lists | `GET/POST /domains/{id}/list-entries`, `DELETE /domains/{id}/list-entries/{eid}` |
 | DKIM | `GET/PUT/DELETE /domains/{id}/dkim` |
@@ -73,7 +73,7 @@ Errors look like `{"error": "This domain already exists", "field": "name"}`.
 | Hostname | `GET/PUT /hostname` |
 | IP addressing | `GET/PUT /ip-config` (`device`: the interface) |
 | Certificates and TLS | `GET /tls`, `POST /tls/letsencrypt/test`, `POST /tls/letsencrypt/apply`, `POST /tls/certificate`, `POST /tls/certificate/apply`, `PUT /tls/versions` |
-| Quarantine | `GET /quarantine`, `GET/DELETE /quarantine/{id}`, `GET /quarantine/{id}/raw`, `POST /quarantine/{id}/release`, `POST /quarantine/{id}/learn-spam` |
+| Quarantine | `GET /quarantine`, `GET/DELETE /quarantine/{id}`, `GET /quarantine/{id}/raw`, `POST /quarantine/{id}/release` (`allow_sender`), `POST /quarantine/{id}/block-sender`, `POST /quarantine/{id}/learn-spam` |
 | Mail log | `GET /mail-log`, `GET /mail-log/{id}`, `GET /mail-log/{id}/raw`, `POST /mail-log/{id}/requeue` |
 | Statistics | `GET /statistics` |
 | Reports | `GET /reports/summary`, `GET /reports/dmarc`, `GET /reports/tls` |
@@ -115,6 +115,13 @@ curl -H "$KEY" -H "Content-Type: application/json" \
 for id in $(curl -s -H "$KEY" "$API/quarantine?rcpt=alice@example.com&status=pending" | jq '.items[].id'); do
   curl -s -X POST -H "$KEY" $API/quarantine/$id/release > /dev/null
 done
+
+# import a user with the password hash of the previous mail system
+curl -H "$KEY" -H "Content-Type: application/json" \
+     -d '{"email": "bob@example.com", "password_hash": "{BLF-CRYPT}$2y$10$..."}' $API/mailbox-users
+
+# release a message and allow its sender for the recipient's domain
+curl -H "$KEY" -H "Content-Type: application/json" -d '{"allow_sender": "domain"}' $API/quarantine/42/release
 
 # generate a DKIM key and print the DNS record
 curl -X PUT -H "$KEY" -H "Content-Type: application/json" \

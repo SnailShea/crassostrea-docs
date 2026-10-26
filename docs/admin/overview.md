@@ -50,12 +50,12 @@ specific value wins. See [Filtering](filtering.md).
 | Valkey | Rspamd's learning data (Bayes, fuzzy), greylisting, rate limits, outbound counts, rewritten links, bans, the Postfix log for the UI, queues of the SIEM and journal senders |
 | unbound | Local validating DNS resolver (DNS blocklists refuse public resolvers) |
 | nginx | HTTPS for the web interface and the API |
-| Web interface (`spamfilter-web`) | Administration, mailbox user self-service, REST API, link protection, metrics |
-| Root services (`spamfilter-hostname`, `-tls`, `-network`, `-backup`, ...) | Changes the web interface may not make itself: hostname, certificates, IP addressing, backups |
-| SIEM and journal senders (`spamfilter-siem`, `spamfilter-journal`) | Events to a SIEM, copies to an archive |
-| netfilter (`spamfilter-netfilter`) | Bans hosts after repeated protocol errors or failed logins |
-| Watchdog (`spamfilter-watchdog`) | Health checks, restarts, notifications |
-| acme.sh (`spamfilter-acme`) | Let's Encrypt certificate |
+| Web interface (`crassostrea-web`) | Administration, mailbox user self-service, REST API, link protection, metrics |
+| Root services (`crassostrea-hostname`, `-tls`, `-network`, `-backup`, ...) | Changes the web interface may not make itself: hostname, certificates, IP addressing, backups |
+| SIEM and journal senders (`crassostrea-siem`, `crassostrea-journal`) | Events to a SIEM, copies to an archive |
+| netfilter (`crassostrea-netfilter`) | Bans hosts after repeated protocol errors or failed logins |
+| Watchdog (`crassostrea-watchdog`) | Health checks, restarts, notifications |
+| acme.sh (`crassostrea-acme`) | Let's Encrypt certificate |
 
 All of them run as systemd services on one host. In a cluster each node runs
 the full set; see [High availability](high-availability.md).

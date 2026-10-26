@@ -6,12 +6,12 @@
 | --- | --- |
 | Update (git fast-forward, packages, redeploy, restart) | `sudo ./update.sh` |
 | Apply changed settings | `sudo system/configure.sh` |
-| State of all services | `systemctl list-units 'spamfilter*' postfix rspamd nginx valkey mariadb unbound 'clamd@*'` |
-| Logs of a component | `journalctl -u postfix` (or `rspamd`, `spamfilter-web`, `spamfilter-netfilter`, ...) |
+| State of all services | `systemctl list-units 'crassostrea*' postfix rspamd nginx valkey mariadb unbound 'clamd@*'` |
+| Logs of a component | `journalctl -u postfix` (or `rspamd`, `crassostrea-web`, `crassostrea-netfilter`, ...) |
 | Mail log | `journalctl SYSLOG_FACILITY=2`, or **Monitoring → Logs** in the web interface (also the other services' journal) |
-| Re-write all filter maps | `sudo systemctl start spamfilter-job@sync` |
-| Send due digests now | `sudo systemctl start spamfilter-job@send-digests` |
-| Synchronise the directories now | `sudo systemctl start spamfilter-job@sync-directories` |
+| Re-write all filter maps | `sudo systemctl start crassostrea-job@sync` |
+| Send due digests now | `sudo systemctl start crassostrea-job@send-digests` |
+| Synchronise the directories now | `sudo systemctl start crassostrea-job@sync-directories` |
 | Make a backup now / list them | `sudo system/backup.sh create` / `sudo system/backup.sh list` |
 | Restore a backup | `sudo system/backup.sh restore NAME-OR-PATH`, see [Backups](backups.md) |
 | Reset an administrator's password | `sudo helper-scripts/reset-admin.sh [username]` |
@@ -27,40 +27,40 @@
 | --- | --- |
 | `postfix` | SMTP (port 25), with a drop-in of the gateway |
 | `rspamd` | Filtering |
-| `clamd@spamfilter`, `clamav-freshclam` | ClamAV and its signature updates (unless `SKIP_CLAMD=y`) |
-| `spamfilter-olefy` | Office macro scanner (unless `SKIP_OLEFY=y`) |
+| `clamd@crassostrea`, `clamav-freshclam` | ClamAV and its signature updates (unless `SKIP_CLAMD=y`) |
+| `crassostrea-olefy` | Office macro scanner (unless `SKIP_OLEFY=y`) |
 | `mariadb`, `valkey`, `unbound`, `nginx` | Database, key-value store, resolver, web server |
-| `spamfilter-web` | Web interface and API (gunicorn, `127.0.0.1:8000`) |
-| `spamfilter-web-internal` | Internal API for Rspamd (settings map, quarantine, mail log, reports; `127.0.0.1:8001`, not proxied) |
-| `spamfilter-siem` | Sends events to the SIEM ([Monitoring](monitoring.md#siem-export)); idles while none is set |
-| `spamfilter-journal` | Sends journal copies to the archive ([Journaling](journaling.md)); idles while none is set |
-| `spamfilter-postfix-tlspol` | MTA-STS and DANE policies for outbound TLS |
-| `spamfilter-netfilter` | Bans hosts in its own nftables table (`inet spamfilter`) |
-| `spamfilter-logship` | Ships the mail log from journald to Valkey (web interface, netfilter) |
-| `spamfilter-watchdog` | Health checks, restarts, notifications |
-| `spamfilter-postfix-control.socket` | Root helper for mail queue actions, started per request |
-| `spamfilter-logs.socket` | Root helper that reads the journal of the gateway's services for **Monitoring → Logs**, started per request |
-| `spamfilter-postfix-reload.path` | Applies the relay networks, the message size limit, the rate limits and the PTR check to Postfix when they change (`postfix-apply`) |
-| `spamfilter-timezone.path` | Sets the time zone chosen in the web interface (`set-timezone`, see [Time zone](#time-zone)) |
-| `spamfilter-hostname.path`, `spamfilter-tls.path`, `spamfilter-network.path`, `spamfilter-backup-request.path` | Root services the web interface asks to change the hostname, certificates and TLS versions, IP addressing, and to make or delete backups; started while a request file in `/var/lib/spamfilter/web/` exists |
-| `spamfilter-cluster-report`, `spamfilter-cluster` | Cluster nodes only: report the node's state every 10 seconds and carry out maintenance, Valkey master and membership changes (root), see [Cluster page](high-availability.md#cluster-page) |
+| `crassostrea-web` | Web interface and API (gunicorn, `127.0.0.1:8000`) |
+| `crassostrea-web-internal` | Internal API for Rspamd (settings map, quarantine, mail log, reports; `127.0.0.1:8001`, not proxied) |
+| `crassostrea-siem` | Sends events to the SIEM ([Monitoring](monitoring.md#siem-export)); idles while none is set |
+| `crassostrea-journal` | Sends journal copies to the archive ([Journaling](journaling.md)); idles while none is set |
+| `crassostrea-postfix-tlspol` | MTA-STS and DANE policies for outbound TLS |
+| `crassostrea-netfilter` | Bans hosts in its own nftables table (`inet crassostrea`) |
+| `crassostrea-logship` | Ships the mail log from journald to Valkey (web interface, netfilter) |
+| `crassostrea-watchdog` | Health checks, restarts, notifications |
+| `crassostrea-postfix-control.socket` | Root helper for mail queue actions, started per request |
+| `crassostrea-logs.socket` | Root helper that reads the journal of the gateway's services for **Monitoring → Logs**, started per request |
+| `crassostrea-postfix-reload.path` | Applies the relay networks, the message size limit, the rate limits and the PTR check to Postfix when they change (`postfix-apply`) |
+| `crassostrea-timezone.path` | Sets the time zone chosen in the web interface (`set-timezone`, see [Time zone](#time-zone)) |
+| `crassostrea-hostname.path`, `crassostrea-tls.path`, `crassostrea-network.path`, `crassostrea-backup-request.path` | Root services the web interface asks to change the hostname, certificates and TLS versions, IP addressing, and to make or delete backups; started while a request file in `/var/lib/crassostrea/web/` exists |
+| `crassostrea-cluster-report`, `crassostrea-cluster` | Cluster nodes only: report the node's state every 10 seconds and carry out maintenance, Valkey master and membership changes (root), see [Cluster page](high-availability.md#cluster-page) |
 | `valkey-sentinel`, `haproxy`, `keepalived`, `garb` | Cluster only, see [High availability](high-availability.md) |
 
-Scheduled jobs (`systemctl list-timers 'spamfilter*'`):
+Scheduled jobs (`systemctl list-timers 'crassostrea*'`):
 
 | Timer | Schedule | Job |
 | --- | --- | --- |
-| `spamfilter-job-cleanup` | daily 03:15 | Expire the quarantine, the mail log, the audit log, reports, statistics and digest tokens; trim the Postfix log |
-| `spamfilter-job-digests` | every 15 minutes | Send due quarantine digests |
-| `spamfilter-job-sync` | every 10 minutes (every minute in a cluster) | Re-write the maps from the database |
-| `spamfilter-job-directories` | every 15 minutes | Synchronise recipients from the [directories](directories.md) |
-| `spamfilter-job-alerts` | every 5 minutes | [Alert mail](monitoring.md#alert-mail) |
-| `spamfilter-job-accounts` | every 5 minutes | [Accounts for recipients of quarantined mail](quarantine.md#accounts-for-recipients-of-quarantined-mail), if turned on |
-| `spamfilter-backup` | daily 02:30 | [Backup](backups.md), then delete old scheduled ones |
-| `spamfilter-dmarc-report` | daily 01:15 | Send [DMARC reports](reports.md#sending-dmarc-reports), if turned on |
-| `spamfilter-sa-rules` | daily | Update the SpamAssassin rules |
-| `spamfilter-clamav-sigs` | every 12 hours | Update the Sanesecurity signatures |
-| `spamfilter-acme` | daily | Obtain or renew the certificate |
+| `crassostrea-job-cleanup` | daily 03:15 | Expire the quarantine, the mail log, the audit log, reports, statistics and digest tokens; trim the Postfix log |
+| `crassostrea-job-digests` | every 15 minutes | Send due quarantine digests |
+| `crassostrea-job-sync` | every 10 minutes (every minute in a cluster) | Re-write the maps from the database |
+| `crassostrea-job-directories` | every 15 minutes | Synchronise recipients from the [directories](directories.md) |
+| `crassostrea-job-alerts` | every 5 minutes | [Alert mail](monitoring.md#alert-mail) |
+| `crassostrea-job-accounts` | every 5 minutes | [Accounts for recipients of quarantined mail](quarantine.md#accounts-for-recipients-of-quarantined-mail), if turned on |
+| `crassostrea-backup` | daily 02:30 | [Backup](backups.md), then delete old scheduled ones |
+| `crassostrea-dmarc-report` | daily 01:15 | Send [DMARC reports](reports.md#sending-dmarc-reports), if turned on |
+| `crassostrea-sa-rules` | daily | Update the SpamAssassin rules |
+| `crassostrea-clamav-sigs` | every 12 hours | Update the Sanesecurity signatures |
+| `crassostrea-acme` | daily | Obtain or renew the certificate |
 
 Times of day are the servers' time zone.
 
@@ -74,7 +74,7 @@ on every node of a cluster:
   UTC either way, so changing the zone changes nothing that was recorded.
 - The **servers** switch to it: the next sync of the maps (at once on the node
   you save on, within the sync interval on the others) writes
-  `/var/lib/spamfilter/web/timezone`, and `spamfilter-timezone.path` runs
+  `/var/lib/crassostrea/web/timezone`, and `crassostrea-timezone.path` runs
   `set-timezone` as root, which sets it with `timedatectl` and restarts the
   services that keep the zone they started with: Rspamd, Postfix, ClamAV,
   Olefy, Unbound, nginx and the gateway's own services (the web interface too,
@@ -92,7 +92,7 @@ name such as `Europe/Berlin`).
 
 ## Watchdog
 
-`spamfilter-watchdog` checks nginx, the web interface, MariaDB, Valkey,
+`crassostrea-watchdog` checks nginx, the web interface, MariaDB, Valkey,
 unbound, Postfix, the mail queue, postfix-tlspol, Rspamd, ClamAV, Olefy, the
 certificate, the last certificate renewal, rate limits and bans, and in a
 cluster the Galera state. When a check fails repeatedly it restarts the
@@ -118,7 +118,7 @@ lifts them. The options are a JSON document in Valkey; change them with
 `valkey-cli`:
 
 ```bash
-REDISPASS=$(sudo sed -n 's/^REDISPASS=//p' /etc/spamfilter/spamfilter.conf)
+REDISPASS=$(sudo sed -n 's/^REDISPASS=//p' /etc/crassostrea/crassostrea.conf)
 valkey-cli -a "$REDISPASS" --no-auth-warning GET F2B_OPTIONS
 valkey-cli -a "$REDISPASS" --no-auth-warning SET F2B_OPTIONS \
   '{"ban_time": 3600, "max_ban_time": 86400, "ban_time_increment": true, "max_attempts": 5,

@@ -11,23 +11,24 @@
 | `system/cluster.sh` | `status`, `bundle HOSTNAME [FILE]`, `members --nodes LIST [--witness H=A \| --no-witness]` (also writes the cluster's membership: the other nodes apply it), `members --standalone`, `maintenance on\|off [NODE] [--force]`, `bootstrap [--force]`, `leave` |
 | `system/backup.sh` | `create`, `list`, `restore NAME-OR-PATH [--yes]` |
 | `system/docs.sh` | `install [SOURCE] [--ref REF]`, `update`, `rebuild`, `remove`, `status` |
+| `iso/build.sh` | `[--ref REF] [--origin URL] [--base-iso PATH] [--out DIR] [--cache DIR] [--engine podman\|docker\|none]`, see [Installation ISO](../admin/installation.md#installation-iso) |
 
-## Helpers in /usr/local/libexec/spamfilter
+## Helpers in /usr/local/libexec/crassostrea
 
 | Helper | Started by | Does |
 | --- | --- | --- |
-| `postfix-control` | `spamfilter-postfix-control.socket`, per connection | Mail queue actions of the web UI |
-| `log-reader` | `spamfilter-logs.socket`, per connection | The journal of a source (`{"source", "lines", "priority"}`) for Monitoring → Logs; the units of each source are listed in the helper only |
-| `postfix-apply` | `spamfilter-postfix-reload.path` | Message size limit, the SMTP rate limits (`rate_limits`: only the four `smtpd_client_*_limit` parameters, whole numbers) and the PTR check (`ptr_check`: `off`, `defer` or `reject` into `sf_ptr_check` and `unknown_client_reject_code`) into `main.cf`, reload for the relay networks, the rate limit exceptions and `client_exempt.cidr` |
-| `set-hostname` | `spamfilter-hostname.path` (`/var/lib/spamfilter/web/hostname`) | Hostname change |
-| `set-timezone` | `spamfilter-timezone.path` (`web/timezone`, kept) | `timedatectl set-timezone` for a name of the zone database, then `try-restart` of the services that read the zone at start (not MariaDB, Valkey); outcome in `/var/lib/spamfilter/timezone/status.json` |
-| `tls-apply` | `spamfilter-tls.path` (`web/tls-request.json`) | `le-test`, `le-apply`, `manual-apply`, `versions`; outcome in `/var/lib/spamfilter/tls/status.json` |
-| `network-apply` | `spamfilter-network.path` (`web/ip-request.json`) | IP addressing of one interface with test and rollback; checks the rule against the other interfaces and sets `IPV4_ENABLED`/`IPV6_ENABLED` from all of them; outcome in `/var/lib/spamfilter/network/status.json` |
-| `backup` | `spamfilter-backup.timer` (`create scheduled`, `prune`), `spamfilter-backup-request.path` (`request`), `backup.sh` (`create manual`) | Backups; outcome in `/var/lib/spamfilter/backups/status.json` |
-| `dmarc-report` | `spamfilter-dmarc-report.timer` | `rspamadm dmarc_report` if the web UI allows it, under a job lock |
-| `acme` | `spamfilter-acme.timer`; `--staging-test NAME...` by `tls-apply` | Certificate |
-| `cluster-node` | `spamfilter-cluster.service` (long-running, cluster nodes) | Every 10 s: probes Valkey, Sentinel and the floating address into `/var/lib/spamfilter/cluster/probe.json`, keeps maintenance in effect; applies `web/cluster-request` (`maintenance=on\|off`, `promote=TOKEN`, `members=`/`witness=`: the membership) and `web/cluster-bundle` (membership and `host=`: writes that host's join bundle to `/var/lib/spamfilter/cluster-bundles/`) |
-| `cluster-setup` | `spamfilter-cluster-setup.path` (`web/cluster-setup.json`) | A single gateway creating (`setup.sh --ha`) or joining a cluster (join information: pinned HTTPS to the member, then `setup.sh --join`); outcome in `/var/lib/spamfilter/cluster-setup/status.json` |
+| `postfix-control` | `crassostrea-postfix-control.socket`, per connection | Mail queue actions of the web UI |
+| `log-reader` | `crassostrea-logs.socket`, per connection | The journal of a source (`{"source", "lines", "priority"}`) for Monitoring → Logs; the units of each source are listed in the helper only |
+| `postfix-apply` | `crassostrea-postfix-reload.path` | Message size limit, the SMTP rate limits (`rate_limits`: only the four `smtpd_client_*_limit` parameters, whole numbers) and the PTR check (`ptr_check`: `off`, `defer` or `reject` into `sf_ptr_check` and `unknown_client_reject_code`) into `main.cf`, reload for the relay networks, the rate limit exceptions and `client_exempt.cidr` |
+| `set-hostname` | `crassostrea-hostname.path` (`/var/lib/crassostrea/web/hostname`) | Hostname change |
+| `set-timezone` | `crassostrea-timezone.path` (`web/timezone`, kept) | `timedatectl set-timezone` for a name of the zone database, then `try-restart` of the services that read the zone at start (not MariaDB, Valkey); outcome in `/var/lib/crassostrea/timezone/status.json` |
+| `tls-apply` | `crassostrea-tls.path` (`web/tls-request.json`) | `le-test`, `le-apply`, `manual-apply`, `versions`; outcome in `/var/lib/crassostrea/tls/status.json` |
+| `network-apply` | `crassostrea-network.path` (`web/ip-request.json`) | IP addressing of one interface with test and rollback; checks the rule against the other interfaces and sets `IPV4_ENABLED`/`IPV6_ENABLED` from all of them; outcome in `/var/lib/crassostrea/network/status.json` |
+| `backup` | `crassostrea-backup.timer` (`create scheduled`, `prune`), `crassostrea-backup-request.path` (`request`), `backup.sh` (`create manual`) | Backups; outcome in `/var/lib/crassostrea/backups/status.json` |
+| `dmarc-report` | `crassostrea-dmarc-report.timer` | `rspamadm dmarc_report` if the web UI allows it, under a job lock |
+| `acme` | `crassostrea-acme.timer`; `--staging-test NAME...` by `tls-apply` | Certificate |
+| `cluster-node` | `crassostrea-cluster.service` (long-running, cluster nodes) | Every 10 s: probes Valkey, Sentinel and the floating address into `/var/lib/crassostrea/cluster/probe.json`, keeps maintenance in effect; applies `web/cluster-request` (`maintenance=on\|off`, `promote=TOKEN`, `members=`/`witness=`: the membership) and `web/cluster-bundle` (membership and `host=`: writes that host's join bundle to `/var/lib/crassostrea/cluster-bundles/`) |
+| `cluster-setup` | `crassostrea-cluster-setup.path` (`web/cluster-setup.json`) | A single gateway creating (`setup.sh --ha`) or joining a cluster (join information: pinned HTTPS to the member, then `setup.sh --join`); outcome in `/var/lib/crassostrea/cluster-setup/status.json` |
 | `logship`, `sa-rules`, `clamav-sigs`, `valkey-role` | their units | see Code layout |
 
 Every root service of the web UI consumes its request file first and
@@ -38,7 +39,7 @@ validates it again; see [Design decisions](design.md#root-services-for-the-web-u
 
 | Variable | Used by | Effect |
 | --- | --- | --- |
-| `SF_CONF` | all | Path of the configuration (default `/etc/spamfilter/spamfilter.conf`) |
+| `SF_CONF` | all | Path of the configuration (default `/etc/crassostrea/crassostrea.conf`) |
 | `SF_ROOT` | `configure.sh`, `setup.sh`, cluster helpers | Prefix for every file written; renders into a scratch tree |
 | `SF_DRYRUN=y` | `configure.sh` | Do not run commands that change the system (systemctl, mysql, semanage, chown, ...), print them instead |
 | `SF_SRC` | `common.sh` | Repository root (default: derived from the script's location) |
@@ -76,26 +77,26 @@ validates it again; see [Design decisions](design.md#root-services-for-the-web-u
 | `ha_bundle HOST FILE`, `ha_unbundle FILE` | Join bundles |
 | `galera_status VAR`, `valkey_tls HOST PORT ARGS` | Query the local Galera state, a member's Valkey or Sentinel |
 
-Also sourced by `common.sh`, and deployed to `/usr/local/lib/spamfilter/lib/`
+Also sourced by `common.sh`, and deployed to `/usr/local/lib/crassostrea/lib/`
 for the root services:
 
 | Library | Functions |
 | --- | --- |
-| `conf.sh` | `conf_set KEY VALUE`: change (or add) one setting in `spamfilter.conf` |
+| `conf.sh` | `conf_set KEY VALUE`: change (or add) one setting in `crassostrea.conf` |
 | `tls.sh` | `tls_valid_min`, `tls_legacy`, `tls_nginx_protocols`, `tls_postfix_protocols`, `tls_postfix_config_file`, `tls_legacy_cnf`, `tls_nginx_dropin`: `HTTPS_TLS_MIN`/`SMTP_TLS_MIN` for nginx and Postfix |
-| `nginx.sh` | `nginx_server_names`, `nginx_names_conf`, `nginx_update_names`: the names nginx answers to (`/etc/nginx/spamfilter-server-names.conf`, included by the servers of the web UI); the root services rewrite it when the hostname or `ADDITIONAL_SAN` change |
+| `nginx.sh` | `nginx_server_names`, `nginx_names_conf`, `nginx_update_names`: the names nginx answers to (`/etc/nginx/crassostrea-server-names.conf`, included by the servers of the web UI); the root services rewrite it when the hostname or `ADDITIONAL_SAN` change |
 | `docs.sh` | `docs_fetch [--update]`, `docs_build [--force]`, `docs_remove`, `docs_nginx_locations`: the documentation at `/docs/` (`DOCS_*`); the site is rebuilt when the hash of its source (`.sf-docs-source` in the site) changes |
 | `ipfamily.sh` | `ip_enabled`, `ip_postfix_inet_protocols`, `ip_postfix_address_preference`, `ip_unbound_lines`: `IPV4_ENABLED`/`IPV6_ENABLED` for the services |
 
 ## Flask commands
 
-Run as the `spamfilter` user with the gateway's environment, e.g.
-`systemctl start spamfilter-job@sync`, or in development with
-`flask --app spamfilter <command>`:
+Run as the `crassostrea` user with the gateway's environment, e.g.
+`systemctl start crassostrea-job@sync`, or in development with
+`flask --app crassostrea <command>`:
 
 | Command | Purpose |
 | --- | --- |
-| `init-db` | Create and migrate tables, defaults, the initial admin, the statistics backfill, the maps (runs before the web UI starts) |
+| `init-db` | Create tables and new columns (`cli._MIGRATIONS`), defaults, the initial admin, the maps (runs before the web UI starts) |
 | `sync` | Re-write the maps and the Valkey copies (DKIM and hash lookup keys) from the database |
 | `cleanup` | Expire the quarantine, mail log, audit log, reports, statistics and digest tokens, trim the Postfix log |
 | `send-digests` | Send due quarantine digests |
@@ -114,7 +115,7 @@ The account commands are recorded in the audit log as `cli`.
 
 ## Internal API
 
-`spamfilter-web-internal` on `127.0.0.1:8001`, for Rspamd only (loopback or
+`crassostrea-web-internal` on `127.0.0.1:8001`, for Rspamd only (loopback or
 `INTERNAL_CLIENTS`):
 
 | Endpoint | Caller | Content |

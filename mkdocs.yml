@@ -70,7 +70,6 @@ nav:
       - Monitoring: admin/monitoring.md
       - Security: admin/security.md
       - Troubleshooting: admin/troubleshooting.md
-      - Migrating from the Docker version: admin/migration.md
   - Developer guide:
       - Architecture: developer/architecture.md
       - Design decisions: developer/design.md
