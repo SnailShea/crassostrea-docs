@@ -5,7 +5,7 @@
 | Script | Usage |
 | --- | --- |
 | `setup.sh` | `[--hostname FQDN] [--yes] [--reconfigure] [--config-only] [--ha] [--ha-nodes LIST] [--ha-witness H=A\|none] [--ha-vip A/P\|none] [--ha-vip-interface IF] [--join FILE]` |
-| `update.sh` | `[--skip-git] [--force]` |
+| `update.sh` | `[--channel release\|main] [--skip-git] [--force]` |
 | `system/install.sh` | no options; run by `setup.sh` and `update.sh` |
 | `system/configure.sh` | `[--no-restart]`: deploy and render only |
 | `system/cluster.sh` | `status`, `bundle HOSTNAME [FILE]`, `members --nodes LIST [--witness H=A \| --no-witness]` (also writes the cluster's membership: the other nodes apply it), `members --standalone`, `maintenance on\|off [NODE] [--force]`, `bootstrap [--force]`, `leave` |

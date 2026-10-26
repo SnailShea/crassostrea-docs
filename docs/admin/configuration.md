@@ -131,8 +131,10 @@ change them with `system/docs.sh`.
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `DOCS_ENABLED` | `n` | `y`: build this documentation and serve it at `/docs/` to logged-in administrators |
-| `DOCS_SOURCE` | empty | The `crassostrea-docs` repository: a git URL or a directory (no spaces or quotes). Empty: the checkout next to the gateway's (`../crassostrea-docs`) |
+| `DOCS_SOURCE` | empty | The `crassostrea-docs` repository: a git URL or a directory (no spaces or quotes). Empty: the checkout next to the gateway's (`../crassostrea-docs`), else `https://github.com/SnailShea/crassostrea-docs.git` |
 | `DOCS_REF` | empty | Branch or tag of a git URL; empty: its default branch |
+| `UPDATE_CHANNEL` | `release` | What `update.sh` installs: `release` (the newest release tag `vX.Y.Z`) or `main` (the newest commit of the branch), see [Updating](installation.md#updating) |
+| `UPDATE_BRANCH` | `main` | The branch of `UPDATE_CHANNEL=main` |
 
 ### High availability
 

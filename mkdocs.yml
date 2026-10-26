@@ -1,6 +1,9 @@
 site_name: Crassostrea
 site_description: Documentation of Crassostrea, a spam filter gateway for EL10
-repo_name: crassostrea
+repo_name: SnailShea/crassostrea
+repo_url: https://github.com/SnailShea/crassostrea
+# the pages live in their own repository
+edit_uri: https://github.com/SnailShea/crassostrea-docs/edit/main/docs/
 copyright: "Crassostrea is licensed under the GPL-3.0. Based on mailcow: dockerized."
 
 theme:
@@ -10,6 +13,7 @@ theme:
     - navigation.sections
     - navigation.top
     - navigation.footer
+    - content.action.edit
     - search.highlight
     - content.code.copy
   palette:

@@ -4,7 +4,7 @@
 
 | Task | Command |
 | --- | --- |
-| Update (git fast-forward, packages, redeploy, restart) | `sudo ./update.sh` |
+| Update (to the newest release or commit, packages, redeploy, restart) | `sudo ./update.sh` |
 | Apply changed settings | `sudo system/configure.sh` |
 | State of all services | `systemctl list-units 'crassostrea*' postfix rspamd nginx valkey mariadb unbound 'clamd@*'` |
 | Logs of a component | `journalctl -u postfix` (or `rspamd`, `crassostrea-web`, `crassostrea-netfilter`, ...) |

@@ -111,4 +111,7 @@ for others.
 
 ## Reporting vulnerabilities
 
-See `SECURITY.md` in the repository.
+Report them privately with a
+[private vulnerability report](https://github.com/SnailShea/crassostrea/security/advisories/new)
+on GitHub, not in public issues; see
+[SECURITY.md](https://github.com/SnailShea/crassostrea/blob/main/SECURITY.md).

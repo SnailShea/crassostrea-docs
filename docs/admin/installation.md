@@ -6,7 +6,7 @@ On a fresh EL10 host:
 
 ```bash
 sudo dnf install -y git
-git clone <repository URL> /opt/crassostrea && cd /opt/crassostrea
+git clone https://github.com/SnailShea/crassostrea.git /opt/crassostrea && cd /opt/crassostrea
 sudo ./setup.sh
 ```
 
@@ -47,7 +47,7 @@ sudo ./setup.sh --hostname filter.example.com --yes
 | `--yes` | No questions; needs `--hostname` for a new configuration; disables ClamAV on hosts with 2.5 GiB RAM or less |
 | `--config-only` | Stop after writing the configuration, e.g. to edit it before installing; run `setup.sh` again to install |
 | `--reconfigure` | Create a new configuration with new passwords even if one exists; the old file is kept as `crassostrea.conf.bak` (copy over the settings you had changed) |
-| `--docs` | Also serve the [documentation](#documentation-on-the-gateway), from the `crassostrea-docs` checkout next to the gateway's (`/opt/crassostrea-docs`) |
+| `--docs` | Also serve the [documentation](#documentation-on-the-gateway), from the `crassostrea-docs` checkout next to the gateway's (`/opt/crassostrea-docs`), else from [GitHub](https://github.com/SnailShea/crassostrea-docs) |
 | `--docs-source SOURCE` | The same, from `SOURCE`: a git URL or a directory of the `crassostrea-docs` repository |
 | `--no-docs` | Do not serve it, and do not ask |
 | `--ha`, `--ha-*`, `--join` | Clusters, see [High availability](high-availability.md) |
@@ -62,7 +62,7 @@ of the **Installation ISO** workflow (Actions → Run workflow), or build it:
 
 ```bash
 iso/build.sh                     # the checked-out branch, into iso/out/
-iso/build.sh --ref v1.4.0 --origin https://github.com/<owner>/<repo>.git
+iso/build.sh --ref v1.4.0 --origin https://github.com/SnailShea/crassostrea.git
 ```
 
 The build downloads the newest AlmaLinux 10 minimal ISO (checked against
@@ -137,12 +137,14 @@ Python environment (`/usr/local/lib/crassostrea/docs-venv`), into
 nothing from elsewhere except the scripts of Mermaid diagrams.
 
 **At installation**: answer *yes* to the question of `setup.sh`, or use
-`--docs` / `--docs-source SOURCE`. With the default source, clone the docs
-next to the gateway:
+`--docs` / `--docs-source SOURCE`. Without a source, the gateway uses a
+`crassostrea-docs` checkout next to its own (`/opt/crassostrea-docs`) if there
+is one, else it clones
+[crassostrea-docs](https://github.com/SnailShea/crassostrea-docs) from GitHub
+and follows it: `update.sh` fetches its new commits.
 
 ```bash
-git clone <docs repository URL> /opt/crassostrea-docs
-git clone <repository URL> /opt/crassostrea && cd /opt/crassostrea
+git clone https://github.com/SnailShea/crassostrea.git /opt/crassostrea && cd /opt/crassostrea
 sudo ./setup.sh --docs
 ```
 
@@ -175,11 +177,26 @@ cd /opt/crassostrea
 sudo ./update.sh
 ```
 
-`update.sh` fast-forwards the git checkout (as the owner of the checkout) and,
-if it is deployed, the documentation's repository, then runs `system/install.sh`: packages, Python packages, pinned tools, the
-deployment of the code and the configuration, new database tables and columns, and a
-restart of the services. Options: `--skip-git` (no `git pull`), `--force` (no
-confirmation).
+`update.sh` brings the git checkout up to date (as the owner of the checkout)
+and, if it is deployed, the documentation's repository, then runs
+`system/install.sh`: packages, Python packages, pinned tools, the deployment of
+the code and the configuration, new database tables and columns, and a restart
+of the services.
+
+What it updates to is the **update channel**, `UPDATE_CHANNEL` in
+`crassostrea.conf`:
+
+| Channel | `update.sh` moves the checkout to |
+| --- | --- |
+| `release` (default) | The newest release: the highest tag `vX.Y.Z` (pre-releases such as `v1.2.0-rc1` are skipped). A checkout that is newer than the newest release (on the branch's later commits) stays where it is: it never goes back to an older version. Before the first release it stays where it is too |
+| `main` | The newest commit of the branch (`UPDATE_BRANCH`, default `main`), fast-forward only. For development and testing gateways |
+
+Options: `--channel release|main` (this time, instead of `UPDATE_CHANNEL`),
+`--skip-git` (nothing from the git remote), `--force` (no confirmation). The
+version a gateway runs, its deployment time and its channel are on the
+**Monitoring** page, with a link to the release notes when it runs a release;
+the changes of each release are in the repository's
+[CHANGELOG.md](https://github.com/SnailShea/crassostrea/blob/main/CHANGELOG.md).
 
 Updates may add services and timers; `configure.sh` enables them. Most new
 filtering features are off until you turn them on. On by default are the

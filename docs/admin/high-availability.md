@@ -165,7 +165,7 @@ the cluster CA: copy it securely (e.g. `scp`) and delete it afterwards. On each
 other member, one after another:
 
 ```bash
-git clone <repository URL> /opt/crassostrea && cd /opt/crassostrea
+git clone https://github.com/SnailShea/crassostrea.git /opt/crassostrea && cd /opt/crassostrea
 sudo ./setup.sh --join /root/crassostrea-join-mx2.example.com.tar
 ```
 

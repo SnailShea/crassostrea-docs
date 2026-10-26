@@ -1,6 +1,6 @@
 # Crassostrea documentation
 
-The documentation of [Crassostrea](../crassostrea), a spam filter gateway for
+The documentation of [Crassostrea](https://github.com/SnailShea/crassostrea), a spam filter gateway for
 EL10, built with [MkDocs](https://www.mkdocs.org/) and the Material theme.
 
 - `docs/admin/`: administrator guide (installation, configuration, domains
@@ -16,7 +16,8 @@ EL10, built with [MkDocs](https://www.mkdocs.org/) and the Material theme.
 The gateway can build and serve this documentation at
 `https://<hostname>/docs/` for its administrators: `setup.sh --docs` (from a
 checkout of this repository next to the gateway's, e.g.
-`/opt/crassostrea-docs`), `setup.sh --docs-source <git URL or directory>`, or
+`/opt/crassostrea-docs`, else from this repository on GitHub),
+`setup.sh --docs-source <git URL or directory>`, or
 later `system/docs.sh install`. See "Documentation on the gateway" in the
 installation guide.
 

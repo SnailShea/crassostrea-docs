@@ -84,6 +84,33 @@ Security problems are reported privately (`SECURITY.md`), not in issues.
   `restart_if_changed`.
 - Anything that must happen once per cluster takes a job lock.
 
+## Releases
+
+Versions follow [Semantic Versioning](https://semver.org/) as described at the
+top of `CHANGELOG.md`: MAJOR when updating needs manual steps, the
+configuration changes incompatibly or the REST API breaks; MINOR for features
+that work after a plain `update.sh`; PATCH for fixes. Before 1.0.0 a MINOR
+release may still break things, listed under **Changed** with what to do.
+
+1. Move the entries under **Unreleased** in `CHANGELOG.md` to a new section
+   `## [X.Y.Z] - YYYY-MM-DD` and commit.
+2. Tag the commit and push the tag:
+
+    ```bash
+    git tag -a vX.Y.Z -m "Crassostrea X.Y.Z"
+    git push --follow-tags
+    ```
+
+3. The **Installation ISO** workflow builds the ISO and attaches it to the
+   release of the tag, with notes generated from the commits.
+4. Tag `crassostrea-docs` with the same version, so a gateway can pin its
+   documentation to its release (`DOCS_REF=vX.Y.Z`).
+
+Gateways with `UPDATE_CHANNEL=release` (the default) move to the release with
+their next `update.sh`. The REST API has its own version: the path (`/api/v1`)
+changes only when the API breaks, `info.version` of the OpenAPI document when
+endpoints or fields are added.
+
 ## Commit messages
 
 A short summary line in the imperative ("Add DKIM rotation to the API"),
