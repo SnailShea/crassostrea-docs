@@ -183,15 +183,20 @@ and, if it is deployed, the documentation's repository, then runs
 the code and the configuration, new database tables and columns, and a restart
 of the services.
 
-What it updates to is the **update channel**, `UPDATE_CHANNEL` in
-`crassostrea.conf`:
+What it updates to is the **update channel** of **Monitoring → Version**
+(API: settings `update_channel` and `update_branch`; `update.sh` reads them
+from the database):
 
 | Channel | `update.sh` moves the checkout to |
 | --- | --- |
 | `release` (default) | The newest release: the highest tag `vX.Y.Z` (pre-releases such as `v1.2.0-rc1` are skipped). A checkout that is newer than the newest release (on the branch's later commits) stays where it is: it never goes back to an older version. Before the first release it stays where it is too |
-| `main` | The newest commit of the branch (`UPDATE_BRANCH`, default `main`), fast-forward only. For development and testing gateways |
+| `main` | The newest commit of a branch (the **Branch** field, default `main`), fast-forward only. For development and testing gateways |
 
-Options: `--channel release|main` (this time, instead of `UPDATE_CHANNEL`),
+A cluster's members share the channel. A witness has no database and takes
+the newest release (or `--channel main` and the branch `main`).
+
+Options: `--channel release|main` (this time, instead of the channel of the
+web interface),
 `--skip-git` (nothing from the git remote), `--force` (no confirmation). The
 version a gateway runs, its deployment time and its channel are on the
 **Monitoring** page, with a link to the release notes when it runs a release;

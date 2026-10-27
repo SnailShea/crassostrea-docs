@@ -29,17 +29,17 @@ their pages, and no tabs where only one page is left.
 | | Training | Teach Bayes and the fuzzy storage; reports from users, see [Filtering](filtering.md#training) |
 | Outbound | Outbound limits, Data loss prevention | See [Outbound mail](outbound.md) |
 | **System** | | |
-| Settings | General | Global thresholds, message limits and mail log retention, quarantine and digests (and accounts for recipients of quarantined mail), virus scanning and the PTR check, administrators (two-factor requirement, audit log retention, allowed networks), the time zone. Links at the top jump to each section; the save button stays in view and says when there are unsaved changes, and leaving the page with unsaved changes asks first |
+| Settings | General | Global thresholds, message limits and mail log retention, quarantine and digests (and accounts for recipients of quarantined mail), virus scanning, the PTR check and the Spamhaus DQS key, administrators (two-factor requirement, audit log retention, allowed networks, sign-in: login lifetime and throttling), the web server (HTTP to HTTPS, Rspamd UI networks, trusted reverse proxies), the time zone. Links at the top jump to each section; the save button stays in view and says when there are unsaved changes, and leaving the page with unsaved changes asks first |
 | | Branding | Name, colour, logo, footer, see [Branding](#branding) |
 | | Relay networks | The servers that may send outbound mail through the gateway, see [Domains and delivery](domains.md#outbound-mail) |
-| | Alerts & export | Prometheus token, SIEM export, alert mail, see [Monitoring](monitoring.md) |
+| | Alerts & export | Prometheus token, SIEM export, alert mail, the watchdog's notices, see [Monitoring](monitoring.md) |
 | | Cluster | Create a cluster or join one (single gateway); join information, maintenance, the Valkey master, removing members (cluster), see [High availability](high-availability.md#setting-up-a-cluster) |
 | | Backups | Backups, see [Backups](backups.md) |
 | Network | Hostname & IP | The gateway's hostname, and the addresses and IP families of each network interface, see [Hostname, IP addressing and DNS](network.md) |
 | | Certificates & TLS | Let's Encrypt or your own certificate, TLS versions, see [Certificates and TLS](certificates.md) |
 | | DNS & ports | Checks of the records and connections the gateway needs, see [Hostname, IP addressing and DNS](network.md#dns-and-ports) |
 | | Banned IPs | Hosts blocked by netfilter, with unban |
-| Monitoring | Monitoring | The alert checks and the state of every service, see [Monitoring](monitoring.md) |
+| Monitoring | Monitoring | The deployed version and the update channel, the alert checks and the state of every service, see [Monitoring](monitoring.md) |
 | | Logs | The Postfix log (all nodes) and the journal of the other services, one service at a time, see [Monitoring](monitoring.md#logs) |
 | | Cluster | Every member's state and the cluster's problems, see [High availability](high-availability.md#cluster-page) |
 | Users | Administrators | Accounts and their roles, see [Administrators and audit log](administrators.md) |
@@ -77,7 +77,7 @@ Everything also works without JavaScript, with normal page loads.
 
 Click your username in the menu to change your password and, as an
 administrator, to set up [two-factor login](administrators.md#two-factor-login).
-Logins end 8 hours after they began (`WEB_SESSION_LIFETIME`); see
+Logins end 8 hours after they began (Settings → General, Sign-in); see
 [Logins](administrators.md#logins).
 
 ## API keys

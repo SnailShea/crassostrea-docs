@@ -106,7 +106,7 @@ release may still break things, listed under **Changed** with what to do.
 4. Tag `crassostrea-docs` with the same version, so a gateway can pin its
    documentation to its release (`DOCS_REF=vX.Y.Z`).
 
-Gateways with `UPDATE_CHANNEL=release` (the default) move to the release with
+Gateways on the release channel (the default) move to the release with
 their next `update.sh`. The REST API has its own version: the path (`/api/v1`)
 changes only when the API breaks, `info.version` of the OpenAPI document when
 endpoints or fields are added.

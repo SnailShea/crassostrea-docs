@@ -62,7 +62,8 @@ address or queue ID) and the **Mail log**.
   [report it](filtering.md#reports-from-users)).
 - Check that DNS blocklists work: `dig +short 2.0.0.127.zen.spamhaus.org`
   should answer `127.0.0.2`. If it does not, the resolver is not the local
-  unbound, or Spamhaus blocks your network (set `SPAMHAUS_DQS_KEY`).
+  unbound, or Spamhaus blocks your network (enter a Spamhaus DQS key under
+  Settings → General, Scanning).
 - Lower the domain's thresholds.
 
 ## Web interface

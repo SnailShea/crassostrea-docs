@@ -109,7 +109,7 @@ that turns malicious after the message arrived is still blocked.
   clicked"). A message is rewritten only when all its recipients are in such
   domains.
 - A click is checked against your **blocked sites** and the domain block lists
-  Spamhaus DBL (with `SPAMHAUS_DQS_KEY` through DQS), SURBL and URIBL. Verdicts
+  Spamhaus DBL (through DQS with the key of Settings → General), SURBL and URIBL. Verdicts
   are cached for 10 minutes.
 - The warning page can offer a way on ("open it anyway"), off by default.
 - Not rewritten: signed or encrypted mail (S/MIME, PGP), outbound mail,

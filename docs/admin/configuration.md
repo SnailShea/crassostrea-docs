@@ -2,7 +2,12 @@
 
 ## The configuration file
 
-All settings of the host live in **`/etc/crassostrea/crassostrea.conf`**. It
+Most settings are made in the web interface (or the REST API) and kept in the
+database: they are the same on every member of a cluster and take effect
+without a `configure.sh` run (see [Settings of the web interface](#settings-of-the-web-interface)).
+What remains in **`/etc/crassostrea/crassostrea.conf`** is what the services
+need before the database answers (names, passwords), what differs per
+cluster member, and what changes installed packages or listening ports. It
 contains `KEY=value` lines and is read like a systemd `EnvironmentFile`:
 values are taken literally, one pair of surrounding quotes is removed, nothing
 is expanded or executed. Quote values that contain spaces.
@@ -17,9 +22,7 @@ sudo /opt/crassostrea/system/configure.sh
 ```
 
 `configure.sh` re-renders the configuration of every service and restarts
-them. Settings that are managed in the web interface (domains, thresholds,
-lists, digests, relay networks, and the features of the Filter, Mail and
-System pages) are not in this file; they are in the database.
+them.
 
 A few settings of this file can also be changed in the web interface, by root
 services that edit it and apply the change: `CRASSOSTREA_HOSTNAME`
@@ -37,7 +40,6 @@ member.
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `CRASSOSTREA_HOSTNAME` | asked by setup | The gateway's fully qualified hostname: the MX target of your domains, the certificate name and Postfix's `myhostname`. In a cluster the name of this member |
-| `LOG_LINES` | `9999` | Mail log lines kept for the web interface |
 
 ### Web interface
 
@@ -48,9 +50,6 @@ member.
 | `WEB_SECURE_COOKIES` | `y` | Send session cookies over HTTPS only. Set `n` only for tests without TLS |
 | `WEB_PUBLIC_URL` | `https://CRASSOSTREA_HOSTNAME` (with `HTTPS_PORT` if not 443) | Base URL of the links in quarantine digests. Its host is one of the names nginx answers to |
 | `RSPAMD_PASSWORD` | random | Password of the Rspamd controller, used by the web interface and for the Rspamd UI at `/rspamd/` |
-| `WEB_LOGIN_MAX_FAILURES` | `10` | Failed logins or API key attempts per client IP within 15 minutes before further ones are refused |
-| `WEB_LOGIN_MAX_ACCOUNT_FAILURES` | `30` | Failed logins per account (from all addresses) within 15 minutes; reaching it locks the account for the rest of the window |
-| `WEB_SESSION_LIFETIME` | `28800` (8 hours) | Seconds after which a login ends, however active it is; closing the browser ends it earlier |
 
 ### Database and Valkey
 
@@ -69,9 +68,6 @@ so you can change it here and apply it.
 | --- | --- | --- |
 | `HTTP_PORT`, `HTTPS_PORT` | `80`, `443` | Ports of nginx. Other ports are labelled for SELinux automatically |
 | `HTTP_BIND`, `HTTPS_BIND` | empty (all) | One local address to listen on |
-| `HTTP_REDIRECT` | `y` | Redirect HTTP to HTTPS (ACME challenges are still answered over HTTP) |
-| `TRUSTED_PROXIES` | empty | Comma separated reverse proxies in front of nginx whose `X-Forwarded-For` header is trusted |
-| `RSPAMD_UI_ALLOW` | empty (everyone) | Comma separated networks allowed to open the Rspamd UI at `/rspamd/` (also its `/rspamd/metrics`) |
 | `HTTPS_TLS_MIN` | `1.2` | Oldest TLS version of HTTPS: `1.2`, `1.1` or `1.0`. The older ones also relax nginx's OpenSSL policy (security level 0, SHA-1) |
 
 ### Network
@@ -105,7 +101,6 @@ See [Certificates](certificates.md).
 | --- | --- | --- |
 | `SKIP_CLAMD` | `n` (`y` offered on small hosts) | `y`: no ClamAV virus scanning |
 | `SKIP_OLEFY` | `n` | `y`: no Olefy macro scanning of Office documents |
-| `SPAMHAUS_DQS_KEY` | empty | Spamhaus Data Query Service key. Without it, the Spamhaus lists are disabled on networks that Spamhaus blocks |
 | `MANAGE_RESOLVER` | `y` | Make the local unbound the system resolver (`/etc/resolv.conf`, NetworkManager stops managing it). The original file is kept as `/etc/resolv.conf.crassostrea-orig` |
 | `HAPROXY_LISTENER` | `n` | `y`: an additional SMTP listener that expects the PROXY protocol, for an HAProxy in front of the gateway |
 | `HAPROXY_LISTENER_BIND` | `127.0.0.1:10025` | Address of that listener. Only expose it to the proxy: its clients can claim any source address |
@@ -114,13 +109,7 @@ See [Certificates](certificates.md).
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `USE_WATCHDOG` | `y` | Run `crassostrea-watchdog`, which checks the services and restarts unhealthy ones |
-| `WATCHDOG_NOTIFY_EMAIL` | unset | Comma separated recipients of notifications (no spaces, no quotes), sent from `watchdog@CRASSOSTREA_HOSTNAME` |
-| `WATCHDOG_NOTIFY_WEBHOOK` | unset | URL that receives notifications as JSON POST |
-| `WATCHDOG_NOTIFY_WEBHOOK_BODY` | unset | JSON body in single quotes; `${SUBJECT}` and `${BODY}` are replaced |
-| `WATCHDOG_NOTIFY_BAN` | `n` | Notify about every banned IP (with a whois lookup) |
-| `WATCHDOG_NOTIFY_START` | `y` | Notify when the watchdog starts |
-| `WATCHDOG_SUBJECT` | `Watchdog ALERT` | Subject prefix of notification mails |
+| `USE_WATCHDOG` | `y` | Run `crassostrea-watchdog`, which checks the services and restarts unhealthy ones. Its notices are set in the web interface |
 | `WATCHDOG_VERBOSE` | `n` | Verbose watchdog logging |
 
 ### Documentation
@@ -133,8 +122,6 @@ change them with `system/docs.sh`.
 | `DOCS_ENABLED` | `n` | `y`: build this documentation and serve it at `/docs/` to logged-in administrators |
 | `DOCS_SOURCE` | empty | The `crassostrea-docs` repository: a git URL or a directory (no spaces or quotes). Empty: the checkout next to the gateway's (`../crassostrea-docs`), else `https://github.com/SnailShea/crassostrea-docs.git` |
 | `DOCS_REF` | empty | Branch or tag of a git URL; empty: its default branch |
-| `UPDATE_CHANNEL` | `release` | What `update.sh` installs: `release` (the newest release tag `vX.Y.Z`) or `main` (the newest commit of the branch), see [Updating](installation.md#updating) |
-| `UPDATE_BRANCH` | `main` | The branch of `UPDATE_CHANNEL=main` |
 
 ### High availability
 
@@ -150,6 +137,31 @@ Settings → Cluster in the web interface sets `HA_NODES` and `HA_WITNESS` on
 every member when nodes join or are removed (from the cluster's membership in
 the database); on the command line `system/cluster.sh members`. See
 [High availability](high-availability.md).
+
+## Settings of the web interface
+
+Settings of services outside the web interface that are made in it (also
+with `PATCH /api/v1/settings`), not in `crassostrea.conf`. The web interface
+runs unprivileged, so it hands the ones of other services
+over, and root services check them again before applying them on every
+member of a cluster:
+
+| Setting | Where | Default | Applied by |
+| --- | --- | --- | --- |
+| How long a login lasts | Settings → General, Administrators (Sign-in) | 480 minutes | the web interface |
+| Failed logins per address, per account, and how long they count | Settings → General, Administrators (Sign-in) | 10, 30, 15 minutes | the web interface |
+| Redirect HTTP to HTTPS | Settings → General, Web server | on | `crassostrea-nginx.service` (ACME challenges are still answered over HTTP) |
+| Networks of the Rspamd UI (`/rspamd/`, also `/rspamd/metrics`) | Settings → General, Web server | any | `crassostrea-nginx.service` |
+| Reverse proxies whose `X-Forwarded-For` is trusted | Settings → General, Web server | none | `crassostrea-nginx.service` |
+| Spamhaus Data Query Service key | Settings → General, Scanning | none | `crassostrea-spamhaus.service` (Postfix's postscreen and Rspamd) |
+| Postfix log lines kept for the Logs page | Settings → General, Messages | 9999 | `crassostrea-logship.service` (from Valkey) |
+| The watchdog's notices: recipients, webhook and its body, subject, at its start, for bans | Settings → Alerts & export, Watchdog notices | none, start on | `crassostrea-watchdog.service` (from Valkey, at every notice) |
+| What `update.sh` installs: the newest release or the newest commit of a branch | Monitoring → Version | the newest release | `update.sh` (reads the database) |
+
+`crassostrea-nginx.service` keeps the previous configuration when nginx
+refuses a value, `crassostrea-spamhaus.service` the previous Rspamd rules
+when Rspamd refuses them; both log to the journal
+(`journalctl -u crassostrea-nginx -u crassostrea-spamhaus`).
 
 ## Overrides that survive configure.sh
 

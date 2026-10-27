@@ -20,13 +20,15 @@ system/
   lib/conf.sh             conf_set: edit one setting of crassostrea.conf
   lib/tls.sh              oldest TLS versions of nginx and Postfix, the legacy OpenSSL configuration
   lib/ipfamily.sh         IPV4_ENABLED/IPV6_ENABLED for Postfix, unbound and nginx
-  lib/nginx.sh            the names nginx answers to (other names and addresses: 404)
+  lib/nginx.sh            the names nginx answers to (other names and addresses: 404), the web server settings
+  lib/spamhaus.sh         the Spamhaus blocklists of Postfix and Rspamd (DQS key or the public mirrors)
   lib/docs.sh             the documentation at /docs/: fetch, build with MkDocs, nginx locations
   libexec/                helpers deployed to /usr/local/libexec/crassostrea
     postfix-control         root helper for mail queue actions (socket-activated)
     log-reader              root helper that reads the journal of fixed units (socket-activated, Logs page)
     postfix-apply           relay networks, message size limit, rate limits, PTR check into Postfix
     set-hostname, set-timezone, tls-apply, network-apply   root services of the web UI (path units)
+    nginx-apply, spamhaus-apply   web server settings, Spamhaus DQS key (path units)
     backup                  create, prune and request handling of backups
     dmarc-report            daily DMARC aggregate reports (rspamadm dmarc_report)
     logship                 journald -> Valkey (mail log, netfilter channel), refused recipients and deliveries -> internal API
@@ -89,8 +91,8 @@ tests/system/             system tests with the real EL10 binaries in namespaces
 | `/usr/local/share/crassostrea/acme.sh/` | pinned acme.sh |
 | `/usr/local/bin/postfix-tlspol` | built from a pinned commit |
 | `/etc/systemd/system/crassostrea-*` | units, timers, drop-ins |
-| `/var/lib/crassostrea/` | acme state, ACME webroot, rendered cluster templates, configuration hashes; `web/` (requests of the web app), `tls/`, `network/` (outcomes of the root services), `cluster/` (probe and maintenance state of `cluster-node`), `postfix/` (relay networks, message size limit, the maintenance map), `backups/`, `restore-<time>/` |
-| `/var/lib/crassostrea/postfix/` | `relay_networks.cidr`, `message_size_limit` (written by the web app; replaces `/etc/postfix/dynamic/`) |
+| `/var/lib/crassostrea/` | acme state, ACME webroot, rendered cluster templates, configuration hashes; `web/` (requests and settings of the web app: also `web-access`, `spamhaus`, `timezone`), `tls/`, `network/` (outcomes of the root services), `cluster/` (probe and maintenance state of `cluster-node`), `postfix/` (relay networks, message size limit, the maintenance map), `backups/`, `restore-<time>/` |
+| `/var/lib/crassostrea/postfix/` | `relay_networks.cidr`, `message_size_limit` (written by the web app) |
 | `/etc/rspamd/custom/` | Rspamd maps (static ones from the repository, the rest written by the web app) |
 
 ## Naming

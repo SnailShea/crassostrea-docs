@@ -97,9 +97,9 @@ unbound, Postfix, the mail queue, postfix-tlspol, Rspamd, ClamAV, Olefy, the
 certificate, the last certificate renewal, rate limits and bans, and in a
 cluster the Galera state. When a check fails repeatedly it restarts the
 affected units (not more often than every 6 minutes) and sends a
-notification by mail (`WATCHDOG_NOTIFY_EMAIL`) and/or webhook
-(`WATCHDOG_NOTIFY_WEBHOOK`). The thresholds are environment variables of the
-unit (`*_THRESHOLD`); override them with a drop-in if needed.
+notice by mail and/or webhook ([Watchdog notices](monitoring.md#watchdog-notices)).
+The thresholds are environment variables of the unit (`*_THRESHOLD`);
+override them with a drop-in if needed.
 
 In a cluster the watchdog never restarts the database (Galera rejoins a node by
 itself, and a restart cannot help a node that lost the majority), and it

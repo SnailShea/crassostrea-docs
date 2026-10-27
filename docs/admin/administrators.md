@@ -31,14 +31,20 @@ of domain names). API keys always have full access.
 
 ## Logins
 
-Logins are throttled: after `WEB_LOGIN_MAX_FAILURES` failures from one
-address, or `WEB_LOGIN_MAX_ACCOUNT_FAILURES` failures for one account, within
-15 minutes further attempts are refused. Failed logins are also reported to
-netfilter, which bans addresses that keep trying.
+Logins are throttled: after 10 failures from one address, or 30 failures for
+one account from any address, within 15 minutes further attempts are refused
+(for an account: also with the right password, until the time has passed).
+The per-address limit applies to invalid API keys too. Failed logins are also
+reported to netfilter, which bans addresses that keep trying.
 
-A login ends 8 hours after it began (`WEB_SESSION_LIFETIME`), however active
-you are; live pages do not keep it alive. Closing the browser or logging out
-ends it earlier.
+A login ends 8 hours after it began, however active you are; live pages do
+not keep it alive. Closing the browser or logging out ends it earlier.
+
+**Sign-in** (Settings → General, Administrators) changes these numbers for
+administrators and mailbox users alike: how long a login lasts (5 minutes to
+7 days), the failed logins per address and per account, and how long they
+count. API: settings `session_lifetime_minutes`, `login_max_failures`,
+`login_max_account_failures` and `login_failure_window_minutes`.
 
 ### Access by network
 
@@ -68,8 +74,9 @@ sudo systemd-run --quiet --wait --pipe --collect --uid=crassostrea --gid=crassos
 Without options the command shows the list.
 
 The address is the one nginx sees. Behind a load balancer or a reverse proxy,
-make sure it passes the client's address (`X-Forwarded-For`), or the list
-matches the proxy. The setting is `admin_allowed_networks`.
+make sure it passes the client's address (`X-Forwarded-For`) and enter the
+proxy's address under **Reverse proxies in front of the gateway** (Settings →
+General, Web server), or the list matches the proxy. The setting is `admin_allowed_networks`.
 
 ## Two-factor login
 

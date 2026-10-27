@@ -208,20 +208,27 @@ concurrent workers and Galera) so they outlive the mail log.
 
 The web UI runs unprivileged, but some pages change the system: the
 hostname, the time zone, certificates and TLS versions, IP addressing,
-backups, and the Postfix settings. They all follow one pattern:
+backups, the Postfix settings, the web server's access rules and the
+Spamhaus key. They all follow one pattern:
 
 1. the web UI validates the input and writes a **request file** into
    `/var/lib/crassostrea/web/` (owned by `crassostrea`);
-2. a **path unit** (`PathExists=`, or `PathChanged=` for the Postfix files and
-   the time zone, which stay) starts a root service: `set-hostname`,
-   `set-timezone`, `tls-apply`, `network-apply`,
-   `backup request`, `postfix-apply` in `system/libexec/`;
+2. a **path unit** (`PathExists=`, or `PathChanged=` for the Postfix files,
+   the time zone, the web server settings and the Spamhaus key, which stay)
+   starts a root service: `set-hostname`, `set-timezone`, `tls-apply`,
+   `network-apply`, `backup request`, `postfix-apply`, `nginx-apply`,
+   `spamhaus-apply` in `system/libexec/`;
 3. the service **consumes** the request first (so the path unit does not loop
    on a bad one), **validates it again** (the web UI is not trusted), applies
    it, and writes its outcome as JSON to a root-owned directory the web UI
    reads (`/var/lib/crassostrea/tls/`, `network/`, `timezone/`, `backups/status.json`);
-4. settings go into `crassostrea.conf` with `conf_set` (`system/lib/conf.sh`),
-   so later `configure.sh` runs keep them.
+4. settings the host needs before the database answers go into
+   `crassostrea.conf` with `conf_set` (`system/lib/conf.sh`), so later
+   `configure.sh` runs keep them. The others stay in the database, and the
+   files the web UI writes on every sync (`services/serverconf.py`,
+   `timezone.sync`, the Postfix files) are what `configure.sh` reads too:
+   the web server settings and the Spamhaus key render through the same
+   functions (`system/lib/nginx.sh`, `spamhaus.sh`) in both.
 
 The shell libraries these services share with `configure.sh` (`conf.sh`,
 `tls.sh`, `ipfamily.sh`) are deployed to `/usr/local/lib/crassostrea/lib/`, so

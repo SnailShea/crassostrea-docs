@@ -12,6 +12,14 @@ When a check fails, a red badge with the number of problems appears next to
 names them. The alert job records the state every 5 minutes, also without
 alert recipients, and opening Monitoring updates it at once.
 
+## Version
+
+The **Version** card shows the version this node runs, when it was deployed,
+and a link to the release notes when it runs a release. Its form sets what
+`sudo ./update.sh` installs: **The newest release** (default) or **The newest
+commit of a branch** with the **Branch** (default `main`); see
+[Updating](installation.md#updating).
+
 ## Prometheus
 
 `https://<hostname>/metrics` answers in the Prometheus text format to requests
@@ -43,7 +51,7 @@ scrape_configs:
 
 Rspamd's own metrics (scan counts, symbol hits, Bayes) are at
 `https://<hostname>/rspamd/metrics`, where the Rspamd UI is reachable
-(`RSPAMD_UI_ALLOW`).
+(Settings → General, Web server).
 
 In a cluster each node answers with its own queue and services; scrape every
 node by its hostname. Every node also answers with the cluster as its nodes
@@ -108,8 +116,25 @@ are now. **Send a test alert** checks the delivery. Alerts come from
 `alerts@<hostname>` through the local Postfix. API:
 `GET /api/v1/monitoring/checks`, settings `alert_*` and `siem_*`.
 
-The watchdog's notifications (`WATCHDOG_NOTIFY_*`) are independent: it covers
-the services themselves and works without the web interface and the database.
+### Watchdog notices
+
+The watchdog's notices are independent of the alert mail: the watchdog covers
+the services themselves and keeps working without the web interface and the
+database. **Watchdog notices** on the same page sets them:
+
+- **Recipients**, one per line: the notices go from `watchdog@<hostname>`
+  straight to the recipients' mail servers, not through the gateway's
+  Postfix, so they arrive while its mail flow is broken.
+- **Subject**, followed by the check, e.g. `Watchdog ALERT: rspamd-crassostrea`.
+- **Webhook URL** and **body**: a POST with the JSON body
+  (`application/json`), for example to a chat; `${SUBJECT}` and `${BODY}`
+  are replaced with the notice. The default body suits Discord.
+- **When the watchdog starts** and **when netfilter bans an address** (with a
+  whois lookup of it).
+
+The web interface writes them to Valkey (`WATCHDOG_NOTIFY`); the watchdog
+reads them for every notice and keeps the last values it read while Valkey
+is down. API: settings `watchdog_*`.
 
 ## Logs
 

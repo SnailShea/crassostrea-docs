@@ -15,7 +15,7 @@ ports are additionally open, but only to the other members' addresses and only
 with TLS and certificates of the cluster CA. `configure.sh` opens the ports in
 firewalld.
 
-Restrict the Rspamd UI with `RSPAMD_UI_ALLOW`, and consider allowing the web
+Restrict the Rspamd UI to your networks (Settings → General, Web server), and consider allowing the web
 interface only from your networks with firewalld rich rules or an upstream
 firewall; mailbox users, digest links and link protection need it from
 wherever your users are.
@@ -85,7 +85,7 @@ transfer them securely and delete them afterwards.
   module if you need it.
 - **Logins** are throttled per address and per account, failed attempts and
   invalid API keys are reported to netfilter, sessions are bound to the client
-  and end 8 hours after the login (`WEB_SESSION_LIFETIME`), and cookies are
+  and end 8 hours after the login (Settings → General, Sign-in), and cookies are
   HTTPS-only with CSRF protection. Administrators can use (or be required to
   use) **two-factor login**; **domain administrators** reach only their
   domains.

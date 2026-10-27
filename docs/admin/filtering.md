@@ -62,7 +62,9 @@ Rspamd combines many modules, configured in the repository's
 - **Bayes** classifier and **fuzzy hashes** (local storage plus a public
   fuzzy storage), trained by you (see below) and automatically from very clear
   cases
-- DNS blocklists and URL blocklists (Spamhaus with a DQS key where needed)
+- DNS blocklists and URL blocklists (Spamhaus with a DQS key where needed:
+  Settings → General, Scanning; without one the public mirrors, which refuse
+  cloud providers' networks)
 - SPF, DKIM, DMARC and ARC
 - header and MIME heuristics, bad attachments and file types, phishing URLs
 - **ClamAV** (viruses, plus Sanesecurity signatures) and **Olefy** (Office

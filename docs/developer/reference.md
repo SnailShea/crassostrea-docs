@@ -22,6 +22,8 @@
 | `postfix-apply` | `crassostrea-postfix-reload.path` | Message size limit, the SMTP rate limits (`rate_limits`: only the four `smtpd_client_*_limit` parameters, whole numbers) and the PTR check (`ptr_check`: `off`, `defer` or `reject` into `sf_ptr_check` and `unknown_client_reject_code`) into `main.cf`, reload for the relay networks, the rate limit exceptions and `client_exempt.cidr` |
 | `set-hostname` | `crassostrea-hostname.path` (`/var/lib/crassostrea/web/hostname`) | Hostname change |
 | `set-timezone` | `crassostrea-timezone.path` (`web/timezone`, kept) | `timedatectl set-timezone` for a name of the zone database, then `try-restart` of the services that read the zone at start (not MariaDB, Valkey); outcome in `/var/lib/crassostrea/timezone/status.json` |
+| `nginx-apply` | `crassostrea-nginx.path` (`web/web-access`, kept) | The web server settings (`http_redirect=`, `rspamd_ui_networks=`, `trusted_proxies=`) into the files nginx includes (`/etc/nginx/crassostrea-https-redirect.conf`, `-rspamd-access.conf`, `-real-ip.conf`, rendered by `system/lib/nginx.sh` like `configure.sh` does), `nginx -t` and reload; the previous files stay if nginx refuses them |
+| `spamhaus-apply` | `crassostrea-spamhaus.path` (`web/spamhaus`, kept) | The Spamhaus DQS key (letters and digits) into Postfix's `sf_spamhaus_dnsbl` (which `postscreen_dnsbl_sites` ends with) and `/etc/postfix/dnsbl_reply.map`, and Rspamd's `custom/dqs-rbl.conf` (`system/lib/spamhaus.sh`); without a key the public mirrors if they answer this network; `rspamadm configtest`, then reloads |
 | `tls-apply` | `crassostrea-tls.path` (`web/tls-request.json`) | `le-test`, `le-apply`, `manual-apply`, `versions`; outcome in `/var/lib/crassostrea/tls/status.json` |
 | `network-apply` | `crassostrea-network.path` (`web/ip-request.json`) | IP addressing of one interface with test and rollback; checks the rule against the other interfaces and sets `IPV4_ENABLED`/`IPV6_ENABLED` from all of them; outcome in `/var/lib/crassostrea/network/status.json` |
 | `backup` | `crassostrea-backup.timer` (`create scheduled`, `prune`), `crassostrea-backup-request.path` (`request`), `backup.sh` (`create manual`) | Backups; outcome in `/var/lib/crassostrea/backups/status.json` |
@@ -133,6 +135,8 @@ The account commands are recorded in the audit log as `cli`.
 | Key | Owner | Content |
 | --- | --- | --- |
 | `POSTFIX_MAILLOG` | logship | Mail log entries (JSON) for the web UI |
+| `POSTFIX_LOG_LINES` | web app | Lines of `POSTFIX_MAILLOG` logship keeps (Settings) |
+| `WATCHDOG_NOTIFY` | web app | Hash of the watchdog's notice settings: `email` (comma separated), `webhook`, `webhook_body`, `subject`, `notify_start`, `notify_ban` (`y`/`n`) |
 | `F2B_CHANNEL` | logship, web app | Pub/sub channel netfilter watches |
 | `F2B_OPTIONS`, `F2B_REGEX` | netfilter, web app | Ban options and rules |
 | `F2B_ACTIVE_BANS`, `F2B_PERM_BANS`, `F2B_QUEUE_UNBAN` | netfilter, web app | Bans and unban requests |
