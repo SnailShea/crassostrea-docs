@@ -26,6 +26,7 @@ and connections the gateway needs.
 | `too many connections from`, `... rate limit exceeded` | Postfix's SMTP connection limits (Rate limits page) |
 | `Temporary lookup failure`, 4xx | The database is not reachable; in a cluster this node lost the majority (see [High availability](high-availability.md#failures)) |
 | `blocked using <list>` (postscreen) | The sender is on a DNS blocklist |
+| Outbound mail deferred with `client TLS configuration problem`; before it `TLS policy lookup for ...` | Postfix could not use the DANE/MTA-STS policy of the destination from postfix-tlspol: `systemctl status crassostrea-postfix-tlspol`, and the **TLS policy lookups** check on the Monitoring page says why. `invalid attribute name` means an answer for a newer Postfix (`smtp_tls_policy_maps` must end in `:QUERY`): run `sudo system/configure.sh`, then `sudo postqueue -f` |
 | Connection refused or timeout on port 25 | firewalld, the provider's port 25 block, or Postfix not running |
 | Connections from one sender's address time out, nothing in the log | netfilter banned the address; check **Banned IPs** |
 

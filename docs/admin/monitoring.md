@@ -48,6 +48,7 @@ scrape_configs:
 | `sf_certificate_expiry_seconds` | | Until the certificate expires |
 | `sf_backup_last_timestamp_seconds`, `sf_backup_last_failed` | | The newest backup, and whether the last one failed |
 | `sf_directory_sync_ok` | `directory` | 1 if the last synchronisation worked |
+| `sf_tls_policy_ok` | | 1 if Postfix's TLS policy lookups work (the TLS policy lookups check) |
 
 Rspamd's own metrics (scan counts, symbol hits, Bayes) are at
 `https://<hostname>/rspamd/metrics`, where the Rspamd UI is reachable
@@ -101,6 +102,7 @@ Mail to the alert recipients (one per line) when a check fails:
 | Backup | the last backup failed, or the newest is older than *n* hours (default 36) |
 | Directories | a [directory](directories.md) does not synchronise |
 | Services | a unit of the gateway is not running |
+| TLS policy lookups | Postfix cannot use the DANE/MTA-STS policy of a domain with an MTA-STS policy (gmail.com): postfix-tlspol does not answer, cannot look it up, or answers in a form this Postfix version does not understand. Postfix then defers such mail with "client TLS configuration problem" |
 
 In a cluster the deferred mail, mail waiting and services checks are made for
 every node, from its report (e.g. *Deferred mail (mx2.example.com)*), and the

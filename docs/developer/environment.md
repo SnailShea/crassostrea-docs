@@ -61,6 +61,7 @@ Useful settings (environment variables, see `crassostrea/config.py`):
 | `RSPAMD_URL`, `RSPAMD_PASSWORD` | Rspamd controller (`http://127.0.0.1:11334`) |
 | `RSPAMD_MAP_DIR`, `POSTFIX_DYNAMIC_DIR` | Where maps are written (on the gateway `/etc/rspamd/custom`, `/var/lib/crassostrea/postfix`) |
 | `POSTFIX_CONTROL_SOCKET` | Socket of the queue helper |
+| `POSTCONF`, `TLS_POLICY_CHECK_DOMAIN` | The TLS policy lookups check (`services/tlspolicy.py`): Postfix's `postconf` (`/usr/sbin/postconf`; without it the check is left out) and the domain it looks up (`gmail.com`) |
 | `HOSTNAME_REQUEST`, `TLS_REQUEST`, `TLS_UPLOAD_DIR`, `TLS_STATUS`, `IP_REQUEST`, `IP_STATUS`, `BACKUP_REQUEST`, `BACKUP_DIR` | Request files of the root services and their outcomes (on the gateway below `/var/lib/crassostrea/`) |
 | `SF_CONF` | `crassostrea.conf`, read for the settings the pages show (`services/sysconf.py`) |
 | `HA_NODES`, `HA_WITNESS` | Make the app behave like a cluster node (dashboard card, node names, job locks) |
