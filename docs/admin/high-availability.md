@@ -80,7 +80,8 @@ Members can be added and removed at any time, see
 - **Low latency** between the nodes: every database write waits for the other
   nodes, so keep them in one region.
 - The full nodes meet the normal [requirements](requirements.md).
-- For `HA_VIP`, the nodes share a network segment (VRRP).
+- For `HA_VIP`, the nodes share the network segment of the floating address
+  (see [Floating address](#floating-address)).
 
 Ports between the members, opened automatically and only for the members:
 
@@ -202,6 +203,41 @@ With `HA_VIP` (e.g. `192.0.2.10/24`), keepalived keeps the address on one
 node whose nginx, web interface and database copy are healthy. It moves when
 that node fails and stays where it is when the node comes back (no flapping).
 Mail does not need it: senders use the MX records.
+
+The nodes agree among themselves which one holds the address (VRRP, sent
+directly to the other nodes' cluster addresses); the router needs no
+configuration. Other hosts find the address like any other on their network,
+by ARP: the node holding it answers, and the node taking it over announces
+itself with a gratuitous ARP, which the router and the other hosts follow
+within a second. This needs:
+
+- an unused address in a subnet the nodes are directly on, outside the range
+  of any DHCP server there;
+- a network that accepts gratuitous ARP. Most cloud and VPS networks only
+  deliver addresses they assigned (use the provider's floating IP instead), as
+  do some hypervisors with strict port security.
+
+#### Cluster and public network
+
+With two networks, a private one for the cluster and a public one for mail
+and the web, `HA_NODES` has the private addresses and the floating address
+belongs to the public network. Set `HA_VIP_INTERFACE` to the public interface
+on every node: VRRP stays on the interface with the node's cluster address,
+the address is added to the public one, and a node whose public interface
+goes down gives it up.
+
+| | Public network | Cluster network |
+| --- | --- | --- |
+| Addresses | each node's own address (MX, A, PTR records); the floating address | `HA_NODES` |
+| Traffic | SMTP, HTTP and HTTPS | Galera, Valkey, Sentinel, VRRP |
+
+If the router reaches the nodes by port forwarding (NAT) rather than directly,
+forward the web ports to the floating address.
+
+If the cluster network fails while both nodes keep their public interface,
+VRRP cannot tell and both take the address; the health check then removes it
+from every node whose database copy lost the majority, so with a witness or
+three nodes one node keeps it.
 
 ## Day-to-day
 

@@ -35,7 +35,7 @@
 
 Every root service of the web UI consumes its request file first and
 validates it again; see [Design decisions](design.md#root-services-for-the-web-ui).
-| `tests/system/run.sh` | `[render] [valkey] [galera] [acme] [netfilter] [js]` |
+| `tests/system/run.sh` | `[render] [valkey] [galera] [keepalived] [acme] [netfilter] [js]` |
 
 ## Environment variables of the scripts
 

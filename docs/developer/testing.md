@@ -77,7 +77,8 @@ computing "the next one" again, and keep margins of seconds, not one.
 without installing anything and without root. The binaries are downloaded with
 `dnf download` and extracted into a work directory; each test runs in an
 unprivileged user and network namespace (`unshare -rn`), where the cluster
-members get their own loopback addresses (10.0.0.x).
+members get their own loopback addresses (10.0.0.x); the `keepalived` test
+gives each node its own network namespace, linked by veth pairs.
 
 ```bash
 tests/system/run.sh                 # all
@@ -89,6 +90,7 @@ tests/system/run.sh valkey galera   # selected
 | `render` | `setup.sh --ha --config-only`, join bundles and dry-run rendering of two nodes and a witness, and of a one-node cluster |
 | `valkey` | TLS-only replication with client certificates, Sentinel discovery and quorum, haproxy routing and pub/sub, failover, the old master returning as a replica, the read-only main configuration; `cluster-node`: its probe, making a node the master, maintenance (421 map, master handed over, priority 0 kept by `valkey-role`) and back |
 | `galera` | Bootstrap, the arbitrator, a full state transfer with mariabackup over TLS, multi-master writes, refusal of a node with a foreign certificate, failure and rejoin, loss of quorum |
+| `keepalived` | Two nodes with a cluster and a public network each, and a router: VRRP on the cluster network and the address on the public one, the router following failovers by gratuitous ARP alone, a failed health check and a public interface going down moving the address, `nopreempt`, a split cluster network; the one-network default |
 | `acme` | Two nginx instances answering each other's ACME challenges without loops; 404 for other names and addresses; `/docs/` only after the web UI (a stub) allows it, otherwise the login page; the configuration of a one-node cluster passes `nginx -t` |
 | `netfilter` | Bans with real nftables on a single gateway, and shared bans between two nodes |
 | `js` | `static/app.js` in jsdom: in-place forms, confirmations, refresh, pausing, errors |
@@ -146,7 +148,8 @@ write into the live database.
 ## Manual tests
 
 Some things need a real host: the installation itself, SELinux in enforcing
-mode, firewalld, systemd ordering and sandboxing, keepalived moving the
-address, real ACME issuance, and mail flow end to end. Use a VM (see
+mode, firewalld, systemd ordering and sandboxing, keepalived's real health
+check (`crassostrea-health`; the system test replaces it with a file, as
+keepalived cannot run scripts in a user namespace), real ACME issuance, and mail flow end to end. Use a VM (see
 [Development environment](environment.md#a-full-gateway-in-a-vm)) and check
 `ausearch -m AVC -ts recent` after exercising the feature.

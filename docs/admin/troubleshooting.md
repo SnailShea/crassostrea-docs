@@ -142,7 +142,7 @@ module with `sudo helper-scripts/selinux-local-policy.sh`.
 | `cluster.sh status`: database `non-Primary` | The node cannot reach a majority: network between the members, or too many members down |
 | MariaDB does not start after a power loss | Expected: [recover](high-availability.md#recovery-after-all-nodes-were-down) with `system/cluster.sh bootstrap` |
 | Valkey: "no Sentinel answers" | Sentinel is down on the members, or port 26379 is blocked |
-| The floating address does not move | keepalived needs VRRP between the nodes and a shared network segment; `journalctl -u keepalived` |
+| The floating address does not move | keepalived needs VRRP between the nodes' cluster addresses, and the address's network must accept gratuitous ARP (most cloud networks do not); `journalctl -u keepalived` |
 | Monitoring → Cluster: a node "has not reported" | Its database is not reachable or out of the majority, or `crassostrea-cluster-report` stopped: `journalctl -u crassostrea-cluster-report` on it |
 | Monitoring → Cluster: "the cluster service does not report" | `crassostrea-cluster` stopped on that node: `journalctl -u crassostrea-cluster` |
 | Maintenance "requested but not in effect" | The node's `crassostrea-cluster-report` or `crassostrea-cluster` does not run, or the node is down: it applies the request when it returns |

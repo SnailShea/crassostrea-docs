@@ -441,7 +441,9 @@ administrator chooses. `ha_unbundle` accepts only the expected file names.
   answer to the other nodes (marked with a header so they never forward
   again), so names shared by several nodes validate.
 - keepalived uses `nopreempt`, so the floating address stays where it is when
-  a failed node returns.
+  a failed node returns. VRRP is unicast between the cluster addresses on
+  their interface; the address may be on another one (`HA_VIP_INTERFACE`),
+  which is then tracked (`track_interface`).
 
 ### Monitoring and maintenance
 

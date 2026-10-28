@@ -130,7 +130,7 @@ change them with `system/docs.sh`.
 | `HA_NODES` | empty (single gateway) | Full cluster nodes: comma separated `hostname=IPv4 address` pairs |
 | `HA_WITNESS` | empty | The vote-only witness: `hostname=IPv4 address` |
 | `HA_VIP` | empty | Floating address with prefix for the web interface, e.g. `192.0.2.10/24` |
-| `HA_VIP_INTERFACE` | the interface with the node's address | Network interface for `HA_VIP` |
+| `HA_VIP_INTERFACE` | the interface with the node's cluster address | Network interface the floating address is added to, e.g. the public one when the cluster addresses are on a private network. VRRP always runs on the interface with the cluster address ([Cluster and public network](high-availability.md#cluster-and-public-network)) |
 | `HA_VIP_ROUTER_ID` | `51` | VRRP router ID (1-255), unique in the network |
 
 Settings → Cluster in the web interface sets `HA_NODES` and `HA_WITNESS` on
