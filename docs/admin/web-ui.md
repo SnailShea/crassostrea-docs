@@ -13,7 +13,7 @@ their pages, and no tabs where only one page is left.
 
 | Menu | Tabs | Purpose |
 | --- | --- | --- |
-| Dashboard | | The average [processing time](mail-log.md#processing-time) (scan and delivery), for full administrators the [mail queue by direction and the use of CPU, memory and storage](mail-log.md#the-gateway-on-the-dashboard); quarantine and domain counts, the busiest domains and the [statistics](mail-log.md#statistics) of the scanned mail and the processing time, hourly or daily; for full administrators also the health of the database, Valkey and Rspamd and, in a cluster, its state. The mail log lists the messages |
+| Dashboard | | The average [processing time](mail-log.md#processing-time) (scan and delivery), for full administrators the [mail queue by direction and the use of CPU, memory and storage](mail-log.md#the-gateway-on-the-dashboard); quarantine and domain counts, the busiest domains and the [statistics](mail-log.md#statistics) of the scanned mail, hourly or daily; for full administrators also the health of the database, Valkey and Rspamd and, in a cluster, its state. The mail log lists the messages |
 | **Mail** | | |
 | Quarantine | | Rejected mail, see [Quarantine and digests](quarantine.md) |
 | Mail log | Mail log | Every scanned message with its score breakdown, text, HTML and headers; download, queue again, see [Mail log and statistics](mail-log.md) |

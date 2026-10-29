@@ -137,8 +137,8 @@ domains) is not counted; the Postfix log (Monitoring → Logs) shows it.
 ### Processing time
 
 The dashboard's **Processing time** card shows two averages of the last 24
-hours or 30 days, and the **Over time** card the same averages per hour or
-day as bars of their own (hover a bar for its value):
+hours or 30 days (the **Over time** card's view); `GET /api/v1/statistics`
+also has them per hour or day:
 
 - **Scan**: Rspamd's time per message (the *Scan time* of a mail log entry),
   counted with the statistics, so it covers the whole period. Hours from
@@ -156,7 +156,7 @@ day as bars of their own (hover a bar for its value):
 The dashboard starts with the processing time and, for full administrators,
 the mail queue and the system load of the node they are logged in to; the
 quarantine, domain and health cards and the busiest domains follow, then the
-statistics and the charts. The page does not update itself; reload it.
+statistics and the chart. The page does not update itself; reload it.
 
 - **Mail queue**: the messages Postfix is delivering, the deferred ones and
   those on hold, inbound and outbound, with their size and how long the
