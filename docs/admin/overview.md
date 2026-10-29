@@ -53,7 +53,7 @@ specific value wins. See [Filtering](filtering.md).
 | Web interface (`crassostrea-web`) | Administration, mailbox user self-service, REST API, link protection, metrics |
 | Root services (`crassostrea-hostname`, `-tls`, `-network`, `-backup`, ...) | Changes the web interface may not make itself: hostname, certificates, IP addressing, backups |
 | SIEM and journal senders (`crassostrea-siem`, `crassostrea-journal`) | Events to a SIEM, copies to an archive |
-| netfilter (`crassostrea-netfilter`) | Bans hosts after repeated protocol errors or failed logins |
+| netfilter (`crassostrea-netfilter`) | Bans hosts after repeated protocol errors or failed logins, and scanners and exploit attempts at once |
 | Watchdog (`crassostrea-watchdog`) | Health checks, restarts, notifications |
 | acme.sh (`crassostrea-acme`) | Let's Encrypt certificate |
 

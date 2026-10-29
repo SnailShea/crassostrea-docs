@@ -202,7 +202,18 @@ the internal API's request limit and MariaDB's `max_allowed_packet` together.
 
 Statistics are not computed from the mail log: `stats.record()` adds the
 message to an hourly counter (an upsert, `ON DUPLICATE KEY UPDATE`, safe with
-concurrent workers and Galera) so they outlive the mail log.
+concurrent workers and Galera) so they outlive the mail log. The counter sums
+Rspamd's scan time too (`stats_hourly.scan_ms`); the average divides it by
+the messages of the hours that have one. The delivery time is Postfix's
+`delay` of the latest attempt (`mail_delivery.delay`), averaged over the sent
+deliveries joined to the mail log by queue ID (`deliveries.average_delay`),
+so the mail log's filters apply.
+
+The dashboard reads the node's use of the host from `/proc` and `statvfs`
+(`services/system.py`): no agent and no extra package. The CPU use is the
+difference of `/proc/stat` since the gunicorn worker last read it (the page
+refreshes every 30 seconds), or over a quarter of a second when that was
+more than ten minutes ago.
 
 ## Root services for the web UI
 
@@ -434,7 +445,11 @@ administrator chooses. `ha_unbundle` accepts only the expected file names.
   Valkey (`store.job_lock`); in a cluster a job without Valkey does not run at
   all.
 - netfilter on every node bans what the logs of all nodes report (logship
-  publishes every node's log lines). `F2B_ACTIVE_BANS` is the shared list: a
+  publishes every node's Postfix lines and nginx access lines). Each rule of
+  `F2B_REGEX` has its own number of matches that ban: certain signs of a
+  scanner (a request for `/.env`, HTTP on port 25, an exploit the web UI
+  refuses in `services/exploits.py`) ban at once, signs that real clients
+  can give (failed logins) only after `max_attempts`. `F2B_ACTIVE_BANS` is the shared list: a
   node never clears it on start or stop, restores it on start, and lifts its
   own nftables rule when the entry disappears, whichever node removed it.
 - Certificates are per node; nginx forwards ACME challenge requests it cannot

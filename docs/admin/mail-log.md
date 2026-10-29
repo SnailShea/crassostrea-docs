@@ -31,7 +31,9 @@ The notices themselves are not mail log entries: Postfix creates them without
 a scan. `crassostrea-logship` finds the delivery lines in the Postfix log of
 each node and reports them to the internal API; they are matched to messages
 by queue ID (Postfix uses long queue IDs, which are never reused) and kept as
-long as the mail log. Delivery results start with the update that added them.
+long as the mail log, with Postfix's delay, which the dashboard averages
+([Processing time](#processing-time)). Delivery results start with the
+update that added them.
 
 ### Refused recipients
 
@@ -131,3 +133,36 @@ existing mail log once.
 
 Mail refused before Rspamd saw it (postscreen, unknown recipients, unknown
 domains) is not counted; the Postfix log (Monitoring → Logs) shows it.
+
+### Processing time
+
+The dashboard's **Processing time** card shows two averages of the period,
+with its direction and domain filter:
+
+- **Scan**: Rspamd's time per message (the *Scan time* of a mail log entry),
+  counted with the statistics, so it covers the whole period. Hours from
+  before the update that added it have no scan time and are left out.
+- **Delivery**: from the message's arrival at the gateway until the next
+  server (the domain's destination host, or the recipient's server for
+  outbound mail) accepted it, per delivered recipient: Postfix's `delay` of
+  the [delivery](#delivery). It includes the time deferred mail waited for a
+  retry, so one recipient that was unreachable for hours raises it. It
+  covers the deliveries of mail still in the mail log (its retention), and
+  starts with the update that added it.
+
+### The gateway on the dashboard
+
+Full administrators also see, of the node they are logged in to:
+
+- **Mail queue**: the messages Postfix is delivering, the deferred ones and
+  those on hold, inbound and outbound, with their size and how long the
+  oldest deferred one waits. The direction is the mail log's; mail it does
+  not know (notices to senders, mail no longer in the mail log) is inbound
+  when it goes to a protected domain. Mail queue (Mail log → Mail queue)
+  lists the messages.
+- **System load**: the use of the CPUs (since the dashboard's last refresh,
+  with the load averages), of memory (what is not available to programs) and
+  of each filesystem of `/`, `/var`, `/var/lib/mysql` and
+  `/var/spool/postfix` (as `df` counts it). The meters turn amber from 75%
+  and red from 90%. In a cluster the alert mail also warns of a filesystem
+  90% full (Monitoring).

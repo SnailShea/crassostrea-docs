@@ -84,7 +84,10 @@ transfer them securely and delete them afterwards.
   `helper-scripts/selinux-local-policy.sh` turns remaining denials into a local
   module if you need it.
 - **Logins** are throttled per address and per account, failed attempts and
-  invalid API keys are reported to netfilter, sessions are bound to the client
+  invalid API keys are reported to netfilter, as are requests that only
+  exploits of other applications send (they are refused) and scans for
+  secrets and other applications in nginx's log (see
+  [Bans](operations.md#bans)), sessions are bound to the client
   and end 8 hours after the login (Settings → General, Sign-in), and cookies are
   HTTPS-only with CSRF protection. Administrators can use (or be required to
   use) **two-factor login**; **domain administrators** reach only their

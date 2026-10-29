@@ -31,7 +31,7 @@ system/
     nginx-apply, spamhaus-apply   web server settings, Spamhaus DQS key (path units)
     backup                  create, prune and request handling of backups
     dmarc-report            daily DMARC aggregate reports (rspamadm dmarc_report)
-    logship                 journald -> Valkey (mail log, netfilter channel), refused recipients and deliveries -> internal API
+    logship                 journald -> Valkey (mail log, netfilter channel; nginx's access log -> netfilter channel), refused recipients and deliveries -> internal API
     acme                    acme.sh wrapper (also --staging-test)
     sa-rules, clamav-sigs   SpamAssassin rules, Sanesecurity signatures
     valkey-role             cluster: Valkey's role at start (and priority 0 in maintenance)

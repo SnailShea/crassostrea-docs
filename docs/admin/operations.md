@@ -107,11 +107,28 @@ restarts haproxy instead of Valkey when Valkey is unreachable.
 
 ## Bans
 
-netfilter watches the mail log and the web interface's failed logins, and
-bans networks (`/32` for IPv4 and `/128` for IPv6 by default) after 10
-attempts within 10 minutes, for 30 minutes, growing with every ban up to
-10000 seconds. Private and loopback addresses, and in a cluster the members'
-addresses, are never banned.
+netfilter watches the mail log, nginx's access log and the web interface,
+and bans networks (`/32` for IPv4 and `/128` for IPv6 by default) for 30
+minutes, growing with every ban up to 10000 seconds. Most rules ban after 10
+matches within 10 minutes; those that only scanners and attackers trigger ban
+sooner:
+
+| Rule | Matches | Bans after |
+| --- | --- | --- |
+| 1 | a failed login to the web interface | 10 |
+| 2, 3 | smtpd: a non-SMTP command, a protocol error | 10 |
+| 4 | an invalid API key | 10 |
+| 5 | a request only an exploit sends: the headers of Next.js server actions (`Next-Action`, `RSC`), or prototype pollution (`__proto__`, `constructor:constructor`) in the body of a client that is not logged in, outside the REST API | 1 |
+| 6 | postscreen: HTTP or TLS on port 25 (`NON-SMTP COMMAND`) | 1 |
+| 7 | postscreen: talking before the greeting (`PREGREET`), bare newlines, command pipelining | 3 |
+| 8 | smtpd: `Relay access denied` (open relay tests) | 3 |
+| 9 | nginx: a request for secrets or version control (`/.env`, `/.git/`, `/.aws/`, `credentials.json`, ...) or for other applications (`*.php`, WordPress, `cgi-bin`, `actuator`, `phpmyadmin`, ...), by name or by address | 1 |
+
+Private and loopback addresses, and in a cluster the members' addresses, are
+never banned. A refused login page (an expired form) or a hang-up during
+postscreen's tests is not a reason for a ban: real users and security
+scanners do both. nginx writes its access log to the journal as well (the
+Logs page, nginx), which is where netfilter reads it.
 
 **Banned IPs** in the web interface (or `GET /api/v1/bans`) lists the bans and
 lifts them. The options are a JSON document in Valkey; change them with
@@ -134,6 +151,12 @@ valkey-cli -a "$REDISPASS" --no-auth-warning HSET F2B_WHITELIST partner-mx.examp
 ```
 
 netfilter applies changes of the lists within a minute.
+
+The rules are the Valkey key `F2B_REGEX`: a JSON object of rules, each a
+`regex` whose first group is the address, and optionally `attempts` (the
+matches that ban, default `max_attempts`). The web interface writes its rules
+when it starts as long as the key holds them; a set of your own (without rule
+1) is left alone.
 
 ## Backup and restore
 
