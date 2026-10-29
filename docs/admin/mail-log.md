@@ -50,8 +50,8 @@ recipients** in the action filter to see only them (`action=refused` in
 They have no message: no score, content, download or queueing again, and
 their page links to the Postfix log lines of the recipient. They are kept as
 long as the mail log, go to the SIEM with the reason, are not journaled, and
-are not counted in the statistics or listed among the dashboard's recent mail,
-so a dictionary attack does not bury real mail there. Only permanent refusals
+and are not counted in the statistics, so a dictionary attack does not
+inflate them. Only permanent refusals
 (5xx) are logged; a temporary one (the destination server could not be asked)
 is retried by the sender. `crassostrea-logship` finds them in the Postfix log on
 each node and reports them to the internal API.
@@ -121,8 +121,8 @@ The **dashboard** shows the scanned messages over time, by outcome:
 
 and the number of viruses, as totals and as a bar chart, for the last 24 hours
 (one bar per hour), 7 days (per 6 hours), 30 days (per day) or 12 months (per
-30 days). Filter by direction and domain; the busiest domains, the quarantine
-counts and the recent mail follow the filter. Domain administrators see their
+30 days). Filter by direction and domain; the processing time, the busiest
+domains and the quarantine counts follow the filter. Domain administrators see their
 domains only. The same data is available as `GET /api/v1/statistics`.
 
 The counts are hourly totals per domain, direction and outcome, added as the
@@ -152,7 +152,10 @@ with its direction and domain filter:
 
 ### The gateway on the dashboard
 
-Full administrators also see, of the node they are logged in to:
+The dashboard starts with the processing time and, for full administrators,
+the mail queue and the system load of the node they are logged in to; the
+quarantine, domain and health cards and the busiest domains follow, then the
+statistics and the chart.
 
 - **Mail queue**: the messages Postfix is delivering, the deferred ones and
   those on hold, inbound and outbound, with their size and how long the
