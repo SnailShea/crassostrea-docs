@@ -164,8 +164,8 @@ statistics and the charts. The page does not update itself; reload it.
   not know (notices to senders, mail no longer in the mail log) is inbound
   when it goes to a protected domain. Mail queue (Mail log → Mail queue)
   lists the messages.
-- **System load**: the use of the CPUs (as the page loads, with the load
-  averages), of memory (what is not available to programs) and
+- **System load**: the use of the CPUs (as the page loads), of memory (what
+  is not available to programs) and
   of each filesystem of `/`, `/var`, `/var/lib/mysql` and
   `/var/spool/postfix` (as `df` counts it). The meters turn amber from 75%
   and red from 90%. In a cluster the alert mail also warns of a filesystem
