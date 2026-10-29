@@ -142,9 +142,8 @@ failed rule leaves nothing behind after the caller's rollback.
 The UI is server-rendered Jinja with a strict CSP (`script-src 'self'`) and
 works without JavaScript. `static/app.js` adds:
 
-- **live regions**: a page puts its changing part into a
-  `<div data-live data-live-refresh="seconds">` that includes a partial
-  template. `views.render_live(page, partial)` renders only the partial when
+- **live regions**: a page puts the part its forms change into a
+  `<div data-live>` that includes a partial template. `views.render_live(page, partial)` renders only the partial when
   the request carries `X-Live-Fragment: 1`; the partial then also shows the
   flashed messages;
 - **in-place forms** (`data-async`): the script posts the form with the header;
@@ -155,8 +154,7 @@ works without JavaScript. `static/app.js` adds:
   login page) is shown as a normal page, and a failed request is reported,
   never repeated.
 
-The refresh pauses while entries are selected, while focus is in the region,
-and while the tab is hidden.
+Pages do not refresh themselves; the regions only serve in-place forms.
 
 The menu is data, `navigation.py`: sections of groups, each a list of pages
 (tabs) with the endpoints that make them active and whether domain
@@ -204,16 +202,15 @@ Statistics are not computed from the mail log: `stats.record()` adds the
 message to an hourly counter (an upsert, `ON DUPLICATE KEY UPDATE`, safe with
 concurrent workers and Galera) so they outlive the mail log. The counter sums
 Rspamd's scan time too (`stats_hourly.scan_ms`); the average divides it by
-the messages of the hours that have one. The delivery time is Postfix's
-`delay` of the latest attempt (`mail_delivery.delay`), averaged over the sent
-deliveries joined to the mail log by queue ID (`deliveries.average_delay`),
-so the mail log's filters apply.
+the messages of the hours that have one. The delivery time has its own hourly
+counter (`delivery_hourly`, per domain and direction): when logship reports a
+recipient of a logged message as sent, `deliveries.record` adds Postfix's
+`delay` (`stats.record_delivery`), once per recipient, so a repeated log line
+does not count twice. Both are kept as long as the statistics.
 
 The dashboard reads the node's use of the host from `/proc` and `statvfs`
-(`services/system.py`): no agent and no extra package. The CPU use is the
-difference of `/proc/stat` since the gunicorn worker last read it (the page
-refreshes every 30 seconds), or over a quarter of a second when that was
-more than ten minutes ago.
+(`services/system.py`): no agent and no extra package. The CPU use is
+sampled from `/proc/stat` over a quarter of a second as the page loads.
 
 ## Root services for the web UI
 

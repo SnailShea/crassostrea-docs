@@ -163,8 +163,8 @@ newest first; the row of names above the list switches between them:
 | Cluster | `crassostrea-cluster`, `crassostrea-cluster-report`, keepalived (only in a cluster) |
 
 Filter by text (the message or the unit) and, except for the Postfix log, by
-level (warnings and errors only, for example). The page updates itself every
-10 seconds and shows the last 500 lines.
+level (warnings and errors only, for example). The page shows the last 500
+lines; reload it for newer ones.
 
 The journal is readable only by root: `crassostrea-logs.socket` starts a small
 root helper (`system/libexec/log-reader`) per request, which reads only the

@@ -22,8 +22,7 @@ days) by the daily cleanup job.
 
 **Quarantine** lists all messages, newest first, with filters for domain,
 direction (inbound/outbound), status (released or not) and a search over
-subject, sender, recipient and queue ID. The list refreshes itself every 30
-seconds while nothing is selected. [Domain administrators](administrators.md)
+subject, sender, recipient and queue ID. [Domain administrators](administrators.md)
 see only their domains' messages.
 
 A message's page shows its headers, the text, its attachments and the Rspamd

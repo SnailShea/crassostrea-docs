@@ -276,7 +276,8 @@ show all nodes.
 
 **Monitoring → Cluster** shows the cluster from the reports of its nodes, on any
 node; maintenance, the Valkey master and the members are managed under
-**Settings → Cluster**. It updates itself every 10 seconds:
+**Settings → Cluster**. The nodes report every 10 seconds; reload the page for
+their latest state:
 
 - the overall state (healthy, degraded, critical), the votes in the database
   cluster and the majority they need, the nodes reporting, the Valkey master

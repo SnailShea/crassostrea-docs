@@ -61,7 +61,7 @@ flowchart LR
 - **DMARC and TLS reports** received and analysed per domain; DMARC reports
   sent about received mail.
 - **Journaling** of all mail to an archive.
-- **Web interface** with live pages, administrators and domain
+- **Web interface** with in-place list actions, administrators and domain
   administrators, two-factor login, an audit log, API keys and branding;
   hostname, IP addressing, certificates and TLS versions, and a check of DNS
   and ports, managed there too.

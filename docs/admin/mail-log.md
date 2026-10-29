@@ -6,8 +6,7 @@
 from the relay networks, newest first: time, direction, sender, recipients,
 subject, score and action. Filter it by domain, direction (inbound/outbound)
 and action, or search the subject, sender, recipients, `From` header,
-Message-ID, queue ID or client address. The list updates itself like the other
-live pages.
+Message-ID, queue ID or client address.
 
 ### Delivery
 
@@ -31,8 +30,8 @@ The notices themselves are not mail log entries: Postfix creates them without
 a scan. `crassostrea-logship` finds the delivery lines in the Postfix log of
 each node and reports them to the internal API; they are matched to messages
 by queue ID (Postfix uses long queue IDs, which are never reused) and kept as
-long as the mail log, with Postfix's delay, which the dashboard averages
-([Processing time](#processing-time)). Delivery results start with the
+long as the mail log; Postfix's delay of each delivered recipient goes to
+the [processing time](#processing-time). Delivery results start with the
 update that added them.
 
 ### Refused recipients
@@ -119,11 +118,12 @@ The **dashboard** shows the scanned messages over time, by outcome:
 | Greylisted or deferred | greylist, soft reject |
 | Rejected | reject |
 
-and the number of viruses, as totals and as a bar chart, for the last 24 hours
-(one bar per hour), 7 days (per 6 hours), 30 days (per day) or 12 months (per
-30 days). Filter by direction and domain; the processing time, the busiest
-domains and the quarantine counts follow the filter. Domain administrators see their
-domains only. The same data is available as `GET /api/v1/statistics`.
+and the number of viruses, as totals and as a bar chart. The dropdown of the
+**Over time** card switches between **hourly** (the last 24 hours, one bar
+per hour) and **daily** (the last 30 days, one bar per day); the totals, the
+processing time and the busiest domains follow it. Domain administrators see
+their domains only. `GET /api/v1/statistics` also has 7 days (per 6 hours)
+and 12 months (per 30 days), by direction and domain.
 
 The counts are hourly totals per domain, direction and outcome, added as the
 mail log stores each message, and kept for **two years** (setting
@@ -136,8 +136,9 @@ domains) is not counted; the Postfix log (Monitoring → Logs) shows it.
 
 ### Processing time
 
-The dashboard's **Processing time** card shows two averages of the period,
-with its direction and domain filter:
+The dashboard's **Processing time** card shows two averages of the last 24
+hours or 30 days, and the **Over time** card the same averages per hour or
+day as bars of their own (hover a bar for its value):
 
 - **Scan**: Rspamd's time per message (the *Scan time* of a mail log entry),
   counted with the statistics, so it covers the whole period. Hours from
@@ -146,8 +147,8 @@ with its direction and domain filter:
   server (the domain's destination host, or the recipient's server for
   outbound mail) accepted it, per delivered recipient: Postfix's `delay` of
   the [delivery](#delivery). It includes the time deferred mail waited for a
-  retry, so one recipient that was unreachable for hours raises it. It
-  covers the deliveries of mail still in the mail log (its retention), and
+  retry, so one recipient that was unreachable for hours raises it. It is
+  counted per hour as Postfix delivers, kept as long as the statistics, and
   starts with the update that added it.
 
 ### The gateway on the dashboard
@@ -155,7 +156,7 @@ with its direction and domain filter:
 The dashboard starts with the processing time and, for full administrators,
 the mail queue and the system load of the node they are logged in to; the
 quarantine, domain and health cards and the busiest domains follow, then the
-statistics and the chart.
+statistics and the charts. The page does not update itself; reload it.
 
 - **Mail queue**: the messages Postfix is delivering, the deferred ones and
   those on hold, inbound and outbound, with their size and how long the
@@ -163,8 +164,8 @@ statistics and the chart.
   not know (notices to senders, mail no longer in the mail log) is inbound
   when it goes to a protected domain. Mail queue (Mail log → Mail queue)
   lists the messages.
-- **System load**: the use of the CPUs (since the dashboard's last refresh,
-  with the load averages), of memory (what is not available to programs) and
+- **System load**: the use of the CPUs (as the page loads, with the load
+  averages), of memory (what is not available to programs) and
   of each filesystem of `/`, `/var`, `/var/lib/mysql` and
   `/var/spool/postfix` (as `df` counts it). The meters turn amber from 75%
   and red from 90%. In a cluster the alert mail also warns of a filesystem

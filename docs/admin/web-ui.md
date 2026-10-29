@@ -13,7 +13,7 @@ their pages, and no tabs where only one page is left.
 
 | Menu | Tabs | Purpose |
 | --- | --- | --- |
-| Dashboard | | The average [processing time](mail-log.md#processing-time) (scan and delivery), for full administrators the [mail queue by direction and the use of CPU, memory and storage](mail-log.md#the-gateway-on-the-dashboard); quarantine and domain counts, the busiest domains and the [statistics](mail-log.md#statistics) of the scanned mail by period, direction and domain; for full administrators also the health of the database, Valkey and Rspamd and, in a cluster, its state. The mail log lists the messages |
+| Dashboard | | The average [processing time](mail-log.md#processing-time) (scan and delivery), for full administrators the [mail queue by direction and the use of CPU, memory and storage](mail-log.md#the-gateway-on-the-dashboard); quarantine and domain counts, the busiest domains and the [statistics](mail-log.md#statistics) of the scanned mail and the processing time, hourly or daily; for full administrators also the health of the database, Valkey and Rspamd and, in a cluster, its state. The mail log lists the messages |
 | **Mail** | | |
 | Quarantine | | Rejected mail, see [Quarantine and digests](quarantine.md) |
 | Mail log | Mail log | Every scanned message with its score breakdown, text, HTML and headers; download, queue again, see [Mail log and statistics](mail-log.md) |
@@ -56,16 +56,10 @@ for the relay networks, `/ip/` for the hostname and IP addressing).
 The hostname, IP addressing and Certificates & TLS change only a single
 gateway; in a cluster they show the state and explain what to do instead.
 
-## Live pages
+## In-place actions
 
-The dashboard, mail log, quarantine, mail queue, logs, the checks and services
-of Monitoring, banned IPs, audit log, journaling, outbound limits, link
-protection, cluster, and the
-status parts of IP addressing, Certificates & TLS and Backups update
-themselves every 5 to 60 seconds. A line above the content shows when it was
-last updated and has a **Pause** button. Updates also pause while you have
-selected entries (a checked box) or are working in the list, and while the
-browser tab is hidden.
+Pages do not update themselves: reload a page to see what changed since it
+was opened (a running backup, a staging test, new mail).
 
 Actions in lists (queue actions, unban, quarantine actions, removing list
 entries, enabling or deleting accounts) apply without reloading the page; the

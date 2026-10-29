@@ -93,7 +93,7 @@ tests/system/run.sh valkey galera   # selected
 | `keepalived` | Two nodes with a cluster and a public network each, and a router: VRRP on the cluster network and the address on the public one, the router following failovers by gratuitous ARP alone, a failed health check and a public interface going down moving the address, `nopreempt`, a split cluster network; the one-network default |
 | `acme` | Two nginx instances answering each other's ACME challenges without loops; 404 for other names and addresses; `/docs/` only after the web UI (a stub) allows it, otherwise the login page; the configuration of a one-node cluster passes `nginx -t`; the access log reaches syslog with its tag and netfilter's probe rule matches scanners' requests, not the login page |
 | `netfilter` | Bans with real nftables on a single gateway (also the rules' own attempts), and shared bans between two nodes |
-| `js` | `static/app.js` in jsdom: in-place forms, confirmations, refresh, pausing, errors |
+| `js` | `static/app.js` in jsdom: in-place forms, confirmations, no periodic refresh, errors |
 
 Requirements: an EL10 host with access to the distribution repositories,
 unprivileged user namespaces, `nft`, `curl`, `openssl`, `python3` with

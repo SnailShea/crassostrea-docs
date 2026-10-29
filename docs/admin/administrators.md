@@ -37,8 +37,7 @@ one account from any address, within 15 minutes further attempts are refused
 The per-address limit applies to invalid API keys too. Failed logins are also
 reported to netfilter, which bans addresses that keep trying.
 
-A login ends 8 hours after it began, however active you are; live pages do
-not keep it alive. Closing the browser or logging out ends it earlier.
+A login ends 8 hours after it began, however active you are. Closing the browser or logging out ends it earlier.
 
 **Sign-in** (Settings → General, Administrators) changes these numbers for
 administrators and mailbox users alike: how long a login lasts (5 minutes to
