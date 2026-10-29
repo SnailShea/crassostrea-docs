@@ -301,9 +301,10 @@ reports. A Postfix `pipe` to a script would run in a confined SELinux domain
 that may not connect to the web app; Rspamd already posts to the internal API.
 So Postfix accepts the addresses with `inline:` tables on `$myhostname` in
 `main.cf` (expanded by Postfix, so a hostname change needs no other files) and
-discards them; an Rspamd prefilter marks such mail "no action" and a
-postfilter posts it to `/internal/reports` or `/internal/learn/<kind>` with
-the envelope and the client. The web app authenticates user reports itself
+discards them; an Rspamd prefilter marks such mail "no action" and an
+idempotent symbol posts it to `/internal/reports` or `/internal/learn/<kind>`
+with the envelope and the client. Not a postfilter: after a pre-result Rspamd
+skips the filters and postfilters, only idempotent symbols still run. The web app authenticates user reports itself
 (relay network, SPF, DKIM), since the unfiltered mail skipped Rspamd's checks.
 
 ## Directories: synchronisation, not lookups
