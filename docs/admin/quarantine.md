@@ -21,8 +21,8 @@ days) by the daily cleanup job.
 ## For administrators
 
 **Quarantine** lists all messages, newest first, with filters for domain,
-direction (inbound/outbound), status (released or not) and a search over
-subject, sender, recipient and queue ID. [Domain administrators](administrators.md)
+direction (inbound/outbound) and a search over subject, sender, recipient and
+queue ID. [Domain administrators](administrators.md)
 see only their domains' messages.
 
 A message's page shows its headers, the text, its attachments and the Rspamd
@@ -34,7 +34,7 @@ Actions:
 
 | Action | Effect |
 | --- | --- |
-| Release | Delivers the message to its recipient, with an `X-Quarantine-Released` header |
+| Release | Delivers the message to its recipient, with an `X-Quarantine-Released` header, and removes it from the quarantine |
 | Release & learn as ham | Also trains Bayes that it is not spam |
 | Learn as spam & delete | Trains Bayes and stores the fuzzy hash, then deletes it |
 | Delete | Removes it |
@@ -73,6 +73,11 @@ decision](filtering.md#checking-a-decision)).
 Several messages can be released, learned or deleted at once from the list.
 Messages with a virus must be released one by one, with an explicit
 confirmation.
+
+A released message leaves the quarantine as soon as Postfix has taken it;
+when Postfix does not take it (the error is shown), it stays for another try.
+The [mail log](mail-log.md) keeps the message and shows its delivery, and the
+audit log who released it.
 
 Released mail is re-injected into Postfix on a local listener that skips the
 filter. Only a header is added, so the original DKIM signature stays valid;

@@ -111,8 +111,8 @@ curl -X PATCH -H "$KEY" -H "Content-Type: application/json" \
 curl -H "$KEY" -H "Content-Type: application/json" \
      -d '{"list_type": "block", "kind": "sender", "value": "*@spam.example"}' $API/list-entries
 
-# release everything pending for one recipient
-for id in $(curl -s -H "$KEY" "$API/quarantine?rcpt=alice@example.com&status=pending" | jq '.items[].id'); do
+# release everything quarantined for one recipient
+for id in $(curl -s -H "$KEY" "$API/quarantine?rcpt=alice@example.com" | jq '.items[].id'); do
   curl -s -X POST -H "$KEY" $API/quarantine/$id/release > /dev/null
 done
 
@@ -133,9 +133,10 @@ curl -H "$KEY" -H "Content-Type: message/rfc822" --data-binary @spam.eml $API/tr
 
 ## Notes
 
-- **Quarantine release** delivers the message again even if it was released
-  before. Messages with a virus need `{"allow_virus": true}`. Releases are
-  recorded as `api:<key name>`.
+- **Quarantine release** delivers the message and removes it from the
+  quarantine; the answer is the message as it was, with `notes`. When Postfix
+  does not take it (503), it stays. Messages with a virus need
+  `{"allow_virus": true}`. The release header names `api:<key name>`.
 - **Unban** (`{"network": "203.0.113.0/24"}`) is applied by netfilter within
   seconds. Permanent bans come from netfilter's denylist, see
   [Operations](operations.md#bans).
