@@ -102,7 +102,7 @@ See [Certificates](certificates.md).
 | `SKIP_CLAMD` | `n` (`y` offered on small hosts) | `y`: no ClamAV virus scanning |
 | `SKIP_OLEFY` | `n` | `y`: no Olefy macro scanning of Office documents |
 | `MANAGE_RESOLVER` | `y` | Make the local unbound the system resolver (`/etc/resolv.conf`, NetworkManager stops managing it). The original file is kept as `/etc/resolv.conf.crassostrea-orig` |
-| `HAPROXY_LISTENER` | `n` | `y`: an additional SMTP listener that expects the PROXY protocol, for an HAProxy in front of the gateway |
+| `HAPROXY_LISTENER` | `n` | `y`: an additional SMTP listener that expects the PROXY protocol, for an HAProxy in front of the gateway. Its postscreen keeps its own cache (`postscreen_cache_haproxy`), so a client that passed on port 25 is new there |
 | `HAPROXY_LISTENER_BIND` | `127.0.0.1:10025` | Address of that listener. Only expose it to the proxy: its clients can claim any source address |
 
 ### Watchdog

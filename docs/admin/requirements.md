@@ -37,7 +37,8 @@ can connect to the host's loopback interface can reach the internal ports
   the DNS block lists and the malware hash registry), 80 and 443 (packages,
   signatures, rule and map downloads, Let's Encrypt; Microsoft 365,
   MalwareBazaar and VirusTotal if you use them), 873 (rsync, Sanesecurity
-  signatures) and UDP 11445 (the public fuzzy hash storage Rspamd queries).
+  signatures) and UDP to the public fuzzy hash storage of rspamd.com, which
+  Rspamd queries for every message.
   An LDAP directory needs 389/636 (or 3268/3269) to its servers.
 - The link endpoint `/l/` of [link protection](protection.md#link-protection),
   like the web interface, must be reachable from wherever your users read
