@@ -22,6 +22,19 @@ recipient is in that domain. A message to several users or domains is filtered
 with the next more general settings. One recipient's settings never decide for
 another recipient.
 
+### Turning greylisting off
+
+**Greylisting** in **Settings → General → Spam thresholds** turns
+greylisting off for the whole gateway, including domains and mailbox users with
+their own greylist threshold: no mail is deferred for its score any more, and
+a score above the greylist threshold has no action until it reaches mark as
+spam. Rspamd follows within a minute; it then neither checks nor stores
+senders in Valkey (`GREYLIST_CHECK`, `GREYLIST_SAVE`). The greylist thresholds
+stay stored and apply again when greylisting is turned back on. The setting is
+`greylisting` (`PATCH /api/v1/settings`), written to
+`/etc/rspamd/custom/scanning.map` for `rspamd.local.lua`. Rate limits and the
+PTR check can still defer mail.
+
 ## Allow and block lists
 
 | Level | Managed under | Applies to |

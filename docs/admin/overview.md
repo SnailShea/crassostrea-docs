@@ -32,7 +32,7 @@ happens:
 
 | Score reaches | Action |
 | --- | --- |
-| Greylist (default 7) | The sender is asked to try again later; real mail servers do, many spam bots do not |
+| Greylist (default 7) | The sender is asked to try again later; real mail servers do, many spam bots do not. Greylisting can be [turned off](filtering.md#turning-greylisting-off) |
 | Mark as spam (default 8) | Delivered with spam headers (`X-Spam: Yes`), so the mail server can file it as junk |
 | Reject (default 15) | Refused during the SMTP dialogue and stored in the quarantine |
 

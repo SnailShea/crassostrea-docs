@@ -267,6 +267,13 @@ without reloading Rspamd:
   multimap rules that set them are normal checks, which a high score skips, so
   the prefilter `SF_MAIL_DIRECTION` sets both before anything else. Without it
   a message rejected early was not quarantined.
+- **Switches** (`scanning.map`: `greylisting`, `virus_scanning`) are
+  conditions on Rspamd's own symbols (`CLAM_VIRUS`, `GREYLIST_CHECK`,
+  `GREYLIST_SAVE`). Greylisting also needs its action taken away: the greylist
+  threshold comes from the settings of the domain or user, so the low-priority
+  prefilter `SF_GREYLISTING_OFF` calls `task:disable_action('greylist')` after
+  the settings were applied, instead of the web app leaving the threshold out of
+  every settings rule.
 - **Valkey scripts in files** (`outbound_limit.redis.lua`,
   `inbound_limit.redis.lua`, `hash_prepare.redis.lua`), loaded with `load_redis_script_from_file`: one
   atomic call per message, and the web app's tests run the same file in
