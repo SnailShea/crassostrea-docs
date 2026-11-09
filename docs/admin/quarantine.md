@@ -25,6 +25,12 @@ direction (inbound/outbound) and a search over subject, sender, recipient and
 queue ID. [Domain administrators](administrators.md)
 see only their domains' messages.
 
+The list shows 50 messages per page. Ticked messages (the box in the header
+ticks the whole page) are released, learned as spam and deleted, or deleted
+in one step with the buttons below the list. Afterwards the list stays on the
+same page; when that was the last page and it is now gone, it shows the new
+last page.
+
 A message's page shows its headers, the text, its attachments and the Rspamd
 symbols that led to the rejection. Messages with an HTML body can switch to
 the **HTML**, shown sanitized in a sandboxed frame without scripts, links,
